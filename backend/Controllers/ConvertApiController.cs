@@ -19,7 +19,7 @@ namespace backend.Controllers
             {"txt", "txt:\"Text\""}
         };
 
-        private static readonly Dictionary<string, string> _fileMimeTypeMap = new ()
+        private static readonly Dictionary<string, string> _fileMimeTypeMap = new()
         {
             { "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
             { "doc",  "application/msword"},
@@ -50,35 +50,53 @@ namespace backend.Controllers
             var outputFilePath = inputFilePath.Replace(inputFileExtension, $".{outputFormat}");
             _fileFormatMap.TryGetValue(outputFormat, out var outputFileFormat);
             outputFileFormat ??= outputFormat;
-
-            using (var stream = new FileStream(inputFilePath, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                using (var stream = new FileStream(inputFilePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                Process process = new Process();
+                process.StartInfo.FileName = "soffice";
+                process.StartInfo.Arguments = $"--headless {(isInputFilePdf ? "--infilter=writer_pdf_import" : "")} --convert-to {outputFileFormat} \"{inputFilePath}\" --outdir \"{outputDirectory}\"";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.Start();
+
+                Console.WriteLine($"Process command: {process.StartInfo.Arguments}");
+
+                string output = await process.StandardOutput.ReadToEndAsync();
+                string error = await process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+
+                Console.WriteLine($"Output: {output}, error: {error}");
+
+                if (process.ExitCode != 0 || !System.IO.File.Exists(outputFilePath))
+                {
+                    return StatusCode(500, $"Conversion failed. Error: {error}");
+                }
+
+                var outputBytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
+                return File(outputBytes, _fileMimeTypeMap[outputFormat], $"converted.{outputFormat}");
             }
-
-            Process process = new Process();
-            process.StartInfo.FileName = "soffice";
-            process.StartInfo.Arguments = $"--headless {(isInputFilePdf ? "--infilter=writer_pdf_import" : "")} --convert-to {outputFileFormat} \"{inputFilePath}\" --outdir \"{outputDirectory}\"";
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.Start();
-
-            Console.WriteLine($"Process command: {process.StartInfo.Arguments}");
-
-            string output = await process.StandardOutput.ReadToEndAsync();
-            string error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-            Console.WriteLine($"Output: {output}, error: {error}");
-
-            if (process.ExitCode != 0 || !System.IO.File.Exists(outputFilePath))
+            catch (Exception e)
             {
-                return StatusCode(500, $"Conversion failed. Error: {error}");
+                return StatusCode(500, $"Conversion failed. Error: {e.Message}");
             }
+            finally
+            {
+                if (Path.Exists(inputFilePath))
+                {
+                    System.IO.File.Delete(inputFilePath);
+                }
 
-            var outputBytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
-            return File(outputBytes, _fileMimeTypeMap[outputFormat], $"converted.{outputFormat}");
+                if (Path.Exists(outputFilePath))
+                {
+                    System.IO.File.Delete(outputFilePath);
+                }
+            }
         }
 
     }
