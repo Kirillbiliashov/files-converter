@@ -16,7 +16,8 @@ namespace backend.Controllers
             {"docx", "docx:\"MS Word 2007 XML\""},
             {"csv", "csv:\"Text - txt - csv (StarCalc)\""},
             {"xlsx", "xlsx:\"Calc MS Excel 2007 XML\""},
-            {"txt", "txt:\"Text\""}
+            {"txt", "txt:\"Text\""},
+            {"rtf", "rtf:\"Rich Text Format\""}
         };
 
         private static readonly Dictionary<string, string> _fileMimeTypeMap = new()
@@ -65,16 +66,14 @@ namespace backend.Controllers
                 process.StartInfo.RedirectStandardError = true;
                 process.Start();
 
-                Console.WriteLine($"Process command: {process.StartInfo.Arguments}");
-
+                Console.WriteLine($"Command: {process.StartInfo.Arguments}");
                 string output = await process.StandardOutput.ReadToEndAsync();
                 string error = await process.StandardError.ReadToEndAsync();
                 await process.WaitForExitAsync();
 
-                Console.WriteLine($"Output: {output}, error: {error}");
-
                 if (process.ExitCode != 0 || !System.IO.File.Exists(outputFilePath))
                 {
+                    Console.WriteLine($"Error: {error}");
                     return StatusCode(500, $"Conversion failed. Error: {error}");
                 }
 
@@ -83,6 +82,7 @@ namespace backend.Controllers
             }
             catch (Exception e)
             {
+                Console.WriteLine($"Error: {e.Message}");
                 return StatusCode(500, $"Conversion failed. Error: {e.Message}");
             }
             finally
