@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-convert',
@@ -11,27 +12,39 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './convert.component.css'
 })
 export class ConvertComponent {
-  selectedFiles: File[] = [];
+  selectedFile: File | undefined;
   fileBlob: Blob | null = null;
   selectedFormat: string = "Format";
+  convertFormats = ["PDF", "DOCX", "CSV", "XLSX", "TXT", "RTF", "HTML", "EPUB"];
+  convertingFile = false;
+  selectedFileName: string | undefined;
 
   constructor(private http: HttpClient) {}
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files) {
-      for (let i = 0; i < input.files.length; i++) {
-        this.selectedFiles.push(input.files[i]);
-      }
+      this.selectedFile = input.files[0];
+      this.selectedFileName = this.selectedFile.name.split(".").shift();
+      this.convertFormats = this.convertFormats.filter(f => f.toLowerCase() != this.getFileExtension(this.selectedFile!.name));
     }
+  }
+
+  private getFileExtension(filename: string): string {
+    const parts = filename.split('.');
+    return parts.length > 1 ? parts.pop()!.toLowerCase() : ''; 
   }
 
   convertFiles() {
     const formData = new FormData();
-    formData.append('file', this.selectedFiles[0]); 
+    formData.append('file', this.selectedFile!); 
     formData.append('outputFormat', this.selectedFormat.toLowerCase());
+    this.convertingFile = true;
 
     this.http.post(`https://localhost:7099/api/convert`, formData, {responseType: 'blob'})
+    .pipe(finalize(() => {
+      this.convertingFile = false;
+    }))
     .subscribe({
       next: (response) => {
         this.fileBlob = response;
@@ -44,7 +57,7 @@ export class ConvertComponent {
 
   downloadFile(): void {
     if (this.fileBlob) {
-      const fileName = `converted.${this.selectedFormat}`; 
+      const fileName = `${this.selectedFileName}.${this.selectedFormat}`; 
       const link = document.createElement('a');
       const url = window.URL.createObjectURL(this.fileBlob);
       link.href = url;
