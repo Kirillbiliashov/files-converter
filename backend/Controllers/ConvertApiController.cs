@@ -17,7 +17,7 @@ namespace backend.Controllers
             {"csv", "csv:\"Text - txt - csv (StarCalc)\""},
             {"xlsx", "xlsx:\"Calc MS Excel 2007 XML\""},
             {"txt", "txt:\"Text\""},
-            {"rtf", "rtf:\"Rich Text Format\""}
+            {"rtf", "rtf:\"Text (encoded):UTF8\""}
         };
 
         private static readonly Dictionary<string, string> _fileMimeTypeMap = new()
@@ -38,19 +38,18 @@ namespace backend.Controllers
             { "pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"},
             { "ppt",   "application/vnd.ms-powerpoint"},
             { "odp",  "application/vnd.oasis.opendocument.presentation"},
+            { "png", "image/png" },
+            { "jpg", "image/jpeg" },
+            { "jpeg", "image/jpeg" }
         };
 
         [HttpPost("")]
         public async Task<IActionResult> ConvertFile(IFormFile file, [FromForm] string outputFormat)
         {
             var inputFileExtension = Path.GetExtension(file.FileName);
-            var isInputFilePdf = inputFileExtension.ToLower() == ".pdf";
             var tempPath = Path.GetTempPath();
             var inputFilePath = Path.Combine(tempPath, $"{Guid.NewGuid()}{inputFileExtension}");
-            var outputDirectory = tempPath;
             var outputFilePath = inputFilePath.Replace(inputFileExtension, $".{outputFormat}");
-            _fileFormatMap.TryGetValue(outputFormat, out var outputFileFormat);
-            outputFileFormat ??= outputFormat;
             try
             {
                 using (var stream = new FileStream(inputFilePath, FileMode.Create))
@@ -58,15 +57,9 @@ namespace backend.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                Process process = new Process();
-                process.StartInfo.FileName = "soffice";
-                process.StartInfo.Arguments = $"--headless {(isInputFilePdf ? "--infilter=writer_pdf_import" : "")} --convert-to {outputFileFormat} \"{inputFilePath}\" --outdir \"{outputDirectory}\"";
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
+                Process process = CreateConversionProcess(inputFilePath, outputFilePath);
                 process.Start();
 
-                Console.WriteLine($"Command: {process.StartInfo.Arguments}");
                 string output = await process.StandardOutput.ReadToEndAsync();
                 string error = await process.StandardError.ReadToEndAsync();
                 await process.WaitForExitAsync();
@@ -97,6 +90,35 @@ namespace backend.Controllers
                     System.IO.File.Delete(outputFilePath);
                 }
             }
+        }
+
+
+        private Process CreateConversionProcess(string inputFilePath, string outputFilePath)
+        {
+            var inputFileFormat = Path.GetExtension(inputFilePath).Substring(1);
+            var outputFormat = Path.GetExtension(outputFilePath).Substring(1);
+            var isInputFilePdf = inputFileFormat.ToLower() == "pdf";
+            Process process = new Process();
+
+            if (outputFormat == "png" || outputFormat == "jpeg" || inputFileFormat == "png" || inputFileFormat == "jpeg")
+            {
+                process.StartInfo.FileName = "magick";
+                process.StartInfo.Arguments = $"{inputFilePath} {outputFilePath}";
+            }
+            else
+            {
+                var outputDirectory = Path.GetDirectoryName(outputFilePath);
+                _fileFormatMap.TryGetValue(outputFormat, out var outputFileFormat);
+                outputFileFormat ??= outputFormat;
+                process.StartInfo.FileName = "soffice";
+                process.StartInfo.Arguments = $"--headless {(isInputFilePdf ? "--infilter=writer_pdf_import" : "")} --convert-to {outputFileFormat} \"{inputFilePath}\" --outdir \"{outputDirectory}\"";
+            }
+
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.RedirectStandardError = true;
+
+            return process;
         }
 
     }

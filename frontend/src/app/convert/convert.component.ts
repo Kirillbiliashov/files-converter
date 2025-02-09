@@ -15,7 +15,7 @@ export class ConvertComponent {
   selectedFile: File | undefined;
   fileBlob: Blob | null = null;
   selectedFormat: string = "Format";
-  convertFormats = ["PDF", "DOCX", "CSV", "XLSX", "TXT", "RTF", "HTML", "EPUB"];
+  convertFormats = ["PDF", "DOCX", "CSV", "XLSX", "TXT", "RTF", "HTML", "EPUB", "PNG", "JPG"];
   convertingFile = false;
   selectedFileName: string | undefined;
 
@@ -57,7 +57,7 @@ export class ConvertComponent {
 
   downloadFile(): void {
     if (this.fileBlob) {
-      const fileName = `${this.selectedFileName}.${this.selectedFormat}`; 
+      const fileName = `${this.selectedFileName}.${this.selectedFormat.toLowerCase()}`; 
       const link = document.createElement('a');
       const url = window.URL.createObjectURL(this.fileBlob);
       link.href = url;
