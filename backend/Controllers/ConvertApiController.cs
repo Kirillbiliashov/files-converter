@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,8 @@ namespace backend.Controllers
     [Route("api/convert")]
     public class ConvertApiController : ControllerBase
     {
+
+        private static readonly List<string> imageFormats = new() { "png", "jpg", "jpeg" };
         private static readonly Dictionary<string, string> _fileFormatMap = new()
         {
             {"docx", "docx:\"MS Word 2007 XML\""},
@@ -48,7 +51,8 @@ namespace backend.Controllers
         {
             var inputFileExtension = Path.GetExtension(file.FileName);
             var tempPath = Path.GetTempPath();
-            var inputFilePath = Path.Combine(tempPath, $"{Guid.NewGuid()}{inputFileExtension}");
+            var tempId = Guid.NewGuid();
+            var inputFilePath = Path.Combine(tempPath, $"{tempId}{inputFileExtension}");
             var outputFilePath = inputFilePath.Replace(inputFileExtension, $".{outputFormat}");
             try
             {
@@ -64,14 +68,50 @@ namespace backend.Controllers
                 string error = await process.StandardError.ReadToEndAsync();
                 await process.WaitForExitAsync();
 
+                var imageFiles = Directory.GetFiles(tempPath, $"{tempId}-*.{outputFormat}");
                 if (process.ExitCode != 0 || !System.IO.File.Exists(outputFilePath))
                 {
-                    Console.WriteLine($"Error: {error}");
-                    return StatusCode(500, $"Conversion failed. Error: {error}");
+                    var outputNotExists = !System.IO.File.Exists(outputFilePath);
+                    if (outputNotExists && outputFormat != "png")
+                    {
+                        return StatusCode(500, $"Conversion failed. Error: {error}");
+                    }
+
+                    if (!imageFiles.Any())
+                    {
+                        return StatusCode(500, $"Conversion failed. Error: {error}");
+                    }
                 }
 
-                var outputBytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
-                return File(outputBytes, _fileMimeTypeMap[outputFormat], $"converted.{outputFormat}");
+                if (!imageFormats.Any(f => f == outputFormat))
+                {
+                    var outputBytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
+                    return File(outputBytes, _fileMimeTypeMap[outputFormat], $"converted.{outputFormat}");
+                }
+
+                string zipFileName = $"{tempId}_images.zip";
+                string zipFilePath = Path.Combine(tempPath, zipFileName); 
+
+                using (var memoryStream = new MemoryStream())
+                {
+                    using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                    {
+                        foreach (string imgFile in imageFiles)
+                        {
+                            var fileInfo = new FileInfo(imgFile);
+                            var entry = archive.CreateEntry(fileInfo.Name, CompressionLevel.Optimal); 
+
+                            using (var entryStream = entry.Open())
+                            using (var fileStream = new FileStream(imgFile, FileMode.Open, FileAccess.Read))
+                            {
+                                fileStream.CopyTo(entryStream);
+                            }
+                        }
+                    }
+
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    return File(memoryStream.ToArray(), "application/zip", zipFileName);
+                }
             }
             catch (Exception e)
             {
