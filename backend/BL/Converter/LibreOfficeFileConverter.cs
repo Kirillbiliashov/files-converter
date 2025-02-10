@@ -36,9 +36,6 @@ namespace backend.BL.Converter
             { "pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"},
             { "ppt",   "application/vnd.ms-powerpoint"},
             { "odp",  "application/vnd.oasis.opendocument.presentation"},
-            { "png", "image/png" },
-            { "jpg", "image/jpeg" },
-            { "jpeg", "image/jpeg" }
         };
 
         public async Task<ConversionResult> ConvertFile(string inputFilePath, string outputFilePath)

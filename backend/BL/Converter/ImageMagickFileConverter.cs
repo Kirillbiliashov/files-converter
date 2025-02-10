@@ -9,9 +9,16 @@ namespace backend.BL.Converter
 {
     public class ImageMagickFileConverter : IFileConverter
     {
+        private static readonly Dictionary<string, string> _fileMimeTypeMap = new()
+        {
+            { "png", "image/png" },
+            { "jpg", "image/jpeg" },
+            { "jpeg", "image/jpeg" }
+        };
+
         public async Task<ConversionResult> ConvertFile(string inputFilePath, string outputFilePath)
         {
-            var outputFormat = Path.GetExtension(outputFilePath).Substring(1);
+            var outputFormat = Path.GetExtension(outputFilePath).Substring(1).Trim().ToLower();
             var tempPath = Path.GetDirectoryName(inputFilePath);
             var tempId = Path.GetFileName(inputFilePath).Split(".").FirstOrDefault();
             if (string.IsNullOrWhiteSpace(tempId) || string.IsNullOrWhiteSpace(tempPath))
@@ -32,10 +39,21 @@ namespace backend.BL.Converter
             await process.WaitForExitAsync();
 
             var imageFiles = Directory.GetFiles(tempPath, $"{tempId}-*.{outputFormat}");
-
-            if (process.ExitCode != 0 || !imageFiles.Any())
+            if (process.ExitCode != 0 || (!imageFiles.Any() && !System.IO.File.Exists(outputFilePath)))
             {
                 throw new Exception($"Conversion failed. Error: {error}");
+            }
+
+            if (!imageFiles.Any())
+            {
+                var bytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
+
+                return new ConversionResult
+                {
+                    OutputBytes = bytes,
+                    MimeType = _fileMimeTypeMap[outputFormat],
+                    Filename = $"converted.{outputFormat}"
+                };
             }
 
             var zipFileName = $"{tempId}_images.zip";
@@ -64,6 +82,7 @@ namespace backend.BL.Converter
                     Filename = zipFileName
                 };
             }
+
         }
 
     }
