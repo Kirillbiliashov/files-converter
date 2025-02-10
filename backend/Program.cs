@@ -1,3 +1,4 @@
+using backend.BL.Converter;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
+
+builder.Services.AddScoped<ImageMagickFileConverter>();
+builder.Services.AddScoped<LibreOfficeFileConverter>();
+builder.Services.AddScoped<Func<string, IFileConverter>>(provider => format =>
+{
+    var imageFormats = new HashSet<string> { "png", "jpg", "jpeg", "gif", "bmp", "tiff" };
+
+    return imageFormats.Contains(format.ToLower())
+        ? provider.GetRequiredService<ImageMagickFileConverter>()
+        : provider.GetRequiredService<LibreOfficeFileConverter>();
+});
 
 builder.Services.AddCors(options =>
             {
