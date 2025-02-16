@@ -43,38 +43,65 @@ namespace backend.BL.Converter
             var inputFileFormat = Path.GetExtension(inputFilePath).Substring(1);
             var outputFormat = Path.GetExtension(outputFilePath).Substring(1);
             var isInputFilePdf = inputFileFormat.ToLower() == "pdf";
+            string userProfilePath = CreateUniqueUserProfile();
 
-            Process process = new Process();
-            var outputDirectory = Path.GetDirectoryName(outputFilePath);
-            _fileFormatMap.TryGetValue(outputFormat, out var outputFileFormat);
-            outputFileFormat ??= outputFormat;
-            process.StartInfo.FileName = "soffice";
-            process.StartInfo.Arguments = $"--headless {(isInputFilePdf ? "--infilter=writer_pdf_import" : "")} --convert-to {outputFileFormat} \"{inputFilePath}\" --outdir \"{outputDirectory}\"";
-
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-
-            process.Start();
-
-            string output = await process.StandardOutput.ReadToEndAsync();
-            string error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-
-            if (process.ExitCode != 0 || !System.IO.File.Exists(outputFilePath))
+            try
             {
-                throw new Exception($"Conversion failed. Error: {error}");
+                var outputDirectory = Path.GetDirectoryName(outputFilePath);
+                _fileFormatMap.TryGetValue(outputFormat, out var outputFileFormat);
+                outputFileFormat ??= outputFormat;
+
+                Process process = new Process();
+                process.StartInfo.FileName = "soffice";
+                process.StartInfo.Arguments = $"--headless -env:UserInstallation=\"{userProfilePath}\" {(isInputFilePdf ? "--infilter=writer_pdf_import" : "")} --convert-to {outputFileFormat} \"{inputFilePath}\" --outdir \"{outputDirectory}\"";
+                process.StartInfo.UseShellExecute = false;
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+
+                process.Start();
+
+                string output = await process.StandardOutput.ReadToEndAsync();
+                string error = await process.StandardError.ReadToEndAsync();
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode != 0 || !System.IO.File.Exists(outputFilePath))
+                {
+                    throw new Exception($"Conversion failed. Error: {error}");
+                }
+
+                var bytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
+
+                return new ConversionResult
+                {
+                    OutputBytes = bytes,
+                    MimeType = _fileMimeTypeMap[outputFormat],
+                    Filename = $"converted.{outputFormat}"
+                };
             }
-
-            var bytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
-
-            return new ConversionResult
+            finally
             {
-                OutputBytes = bytes,
-                MimeType = _fileMimeTypeMap[outputFormat],
-                Filename = $"converted.{outputFormat}"
-            };
+                DeleteUserProfile(userProfilePath);
+            }
         }
+
+
+        private string CreateUniqueUserProfile()
+        {
+            DirectoryInfo tempDir = Directory.CreateTempSubdirectory();
+            string userProfilePath = new Uri(tempDir.FullName).AbsoluteUri;
+            return userProfilePath;
+        }
+
+        private void DeleteUserProfile(string userProfilePath)
+        {
+            Uri uri = new Uri(userProfilePath);
+            string localPath = uri.LocalPath;
+
+            if (Directory.Exists(localPath))
+            {
+                Directory.Delete(localPath, true);
+            }
+        }
+
     }
 }
