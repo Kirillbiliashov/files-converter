@@ -87,4 +87,8 @@ export class ConvertComponent {
     window.URL.revokeObjectURL(url);
   }
 
+  deleteFile(fileItem: FileItem) {
+    this.selectedFiles = this.selectedFiles.filter(f => f != fileItem);
+  }
+
 }
