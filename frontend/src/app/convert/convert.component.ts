@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { FormatBytesPipe } from '../pipes/format-bytes-pipe';
 import { FileItem } from '../models/file-item';
+import * as JSZip from 'jszip';
 
 @Component({
   selector: 'app-convert',
@@ -45,13 +46,14 @@ export class ConvertComponent {
     return convertFormats;
   }
 
-  removeInputFile() {
-    // this.selectedFile = null;
-  }
-
   private getFileExtension(filename: string): string {
     const parts = filename.split('.');
     return parts.length > 1 ? parts.pop()!.toLowerCase() : '';
+  }
+
+  private getFileNameWithoutExt(filename: string): string {
+    const parts = filename.split('.');
+    return parts.length > 1 ? parts.shift()!.toLowerCase() : '';
   }
 
   convertFile(fileItem: FileItem) {
@@ -90,5 +92,46 @@ export class ConvertComponent {
   deleteFile(fileItem: FileItem) {
     this.selectedFiles = this.selectedFiles.filter(f => f != fileItem);
   }
+
+  convertAllFiles() {
+    const formData = new FormData();
+
+    const metadata = this.selectedFiles.map((fileItem, index) => ({
+      fileName: fileItem.file.name,
+      outputFormat: fileItem.selectedFormat
+    }));
+  
+    this.selectedFiles.forEach(fileItem => {
+      formData.append('files', fileItem.file, fileItem.file.name);
+      fileItem.status = "Converting";
+    });
+
+    formData.append('metadata', JSON.stringify(metadata));
+
+    this.http.post(`https://localhost:7099/api/convert/all`, formData, { responseType: 'blob', observe: 'response' })
+      .subscribe({
+        next: (response) => {
+          if (response.body) {
+            JSZip.loadAsync(response.body).then(zip => {
+              Object.keys(zip.files).forEach(async fileName => {
+                const fileItem = this.selectedFiles.find(f => 
+                  this.getFileNameWithoutExt(f.file.name) == this.getFileNameWithoutExt(fileName));
+                  if (fileItem) {
+                    fileItem.convertedBlob = await zip.files[fileName].async('blob');
+                    fileItem.status = "Converted";
+                  }
+              });
+            }).catch(error => {
+              console.error('Error reading ZIP:', error);
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error:', error);
+        }
+      });
+
+  }
+
 
 }

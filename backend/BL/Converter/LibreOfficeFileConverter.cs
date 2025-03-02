@@ -70,12 +70,12 @@ namespace backend.BL.Converter
                 }
 
                 var bytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
-
+                var filename = Path.GetFileNameWithoutExtension(inputFilePath);
                 return new ConversionResult
                 {
                     OutputBytes = bytes,
                     MimeType = _fileMimeTypeMap[outputFormat],
-                    Filename = $"converted.{outputFormat}"
+                    Filename = $"{filename}.{outputFormat}"
                 };
             }
             finally

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using backend.BL.Converter;
 using Microsoft.AspNetCore.Mvc;
@@ -47,10 +48,70 @@ namespace backend.Controllers
         [HttpPost("")]
         public async Task<IActionResult> ConvertFile(IFormFile file, [FromForm] string outputFormat)
         {
+            try
+            {
+                var conversionResult = await ConvertFileAsync(file, outputFormat.ToLower());
+                return File(conversionResult.OutputBytes, conversionResult.MimeType, conversionResult.Filename);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, $"Conversion failed. Error: {e.Message}");
+            }
+        }
+
+        [HttpPost("all")]
+        public async Task<IActionResult> ConvertMultipleFiles(IFormFileCollection files)
+        {
+            var metadata = JsonSerializer.Deserialize<List<ConvertMetadata>>(Request.Form["metadata"], 
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            var tasks = new List<Task<ConversionResult>>();
+            foreach (var file in files)
+            {
+                var fileMetadata = metadata?.FirstOrDefault(m => m.FileName == file.FileName);
+                if (fileMetadata == null)
+                {
+                    continue;
+                }
+                tasks.Add(ConvertFileAsync(file, fileMetadata.OutputFormat.ToLower()));
+            }
+
+            var results = await Task.WhenAll(tasks);
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+                {
+                    foreach (var result in results)
+                    {
+                        if (result == null)
+                        {
+                            continue;
+                        }
+
+                        var zipEntry = archive.CreateEntry(result.Filename, CompressionLevel.Fastest);
+                        using (var entryStream = zipEntry.Open())
+                        {
+                            await entryStream.WriteAsync(result.OutputBytes, 0, result.OutputBytes.Length);
+                        }
+                    }
+                }
+
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                return File(memoryStream.ToArray(), "application/zip", "files.zip");
+            }
+
+        }
+
+        private async Task<ConversionResult> ConvertFileAsync(IFormFile file, string outputFormat)
+        {
             var inputFileExtension = Path.GetExtension(file.FileName);
             var tempPath = Path.GetTempPath();
             var tempId = Guid.NewGuid();
-            var inputFilePath = Path.Combine(tempPath, $"{tempId}{inputFileExtension}");
+            var inputFilePath = Path.Combine(tempPath, file.FileName);
             var outputFilePath = inputFilePath.Replace(inputFileExtension, $".{outputFormat}");
 
             try
@@ -61,14 +122,13 @@ namespace backend.Controllers
                 }
 
                 var converter = _converterFactory(outputFormat);
-                var result = await converter.ConvertFile(inputFilePath, outputFilePath);
-
-                return File(result.OutputBytes, result.MimeType, result.Filename);
+                return await converter.ConvertFile(inputFilePath, outputFilePath);
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Error: {e.Message}");
-                return StatusCode(500, $"Conversion failed. Error: {e.Message}");
+                throw;
+                // return StatusCode(500, $"Conversion failed. Error: {e.Message}");
             }
             finally
             {
@@ -85,4 +145,11 @@ namespace backend.Controllers
         }
 
     }
+
+    public class ConvertMetadata
+    {
+        public string FileName { get; set; }
+        public string OutputFormat { get; set; }
+    }
+
 }
