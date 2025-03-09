@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 using backend.BL.Converter;
@@ -62,7 +63,7 @@ namespace backend.Controllers
         [HttpPost("all")]
         public async Task<IActionResult> ConvertMultipleFiles(IFormFileCollection files)
         {
-            var metadata = JsonSerializer.Deserialize<List<ConvertMetadata>>(Request.Form["metadata"], 
+            var metadata = JsonSerializer.Deserialize<List<ConvertMetadata>>(Request.Form["metadata"],
             new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -143,6 +144,27 @@ namespace backend.Controllers
                 }
             }
         }
+
+
+        [HttpGet("key")]
+        public async Task<IActionResult> GenerateSecurityKey()
+        {
+            var key = GenerateSecureKey();
+            return Ok(key);
+        }
+
+
+        static string GenerateSecureKey(int keySize = 32) // 32 bytes = 256 bits
+        {
+            byte[] key = new byte[keySize];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(key);
+            }
+            return Convert.ToBase64String(key);
+        }
+
+
 
     }
 
