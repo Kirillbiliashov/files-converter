@@ -14,6 +14,8 @@ import { Router } from '@angular/router';
 })
 export class LoginComponent {
   showLogin = true;
+  formSubmitted = false;
+  errorMessage: string | null = null;
 
   userForm: FormGroup;
 
@@ -59,6 +61,8 @@ export class LoginComponent {
 
 
   login() {
+    this.formSubmitted = true; 
+
     if (this.userForm.valid) {
 
       if (this.showLogin) {
@@ -66,7 +70,7 @@ export class LoginComponent {
         this.authService.login(email, password).subscribe({
           next: () => this.router.navigate(['/convert']),
           error: err => {
-            console.error(err);
+            this.errorMessage = err.error;
           }
         });
       } else {
@@ -75,16 +79,24 @@ export class LoginComponent {
         this.authService.register(name, email, password).subscribe({
           next: () => this.router.navigate(['/convert']),
           error: err => {
-            console.error(err);
+            this.errorMessage = err.error;
           }
         });
-
-
       }
 
+      this.formSubmitted = false; 
+      this.userForm.reset(); 
+
     } else {
-      console.log('Form is invalid');
+
+      console.log('Form is invalid, errors: ', this.userForm.errors);
     }
+  }
+
+
+  onFieldChange() {
+    this.formSubmitted = false;
+    this.errorMessage = null;
   }
 
 
