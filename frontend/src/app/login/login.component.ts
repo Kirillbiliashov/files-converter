@@ -100,4 +100,9 @@ export class LoginComponent {
   }
 
 
+  loginWithGoogle() {
+    window.location.href = 'https://localhost:7099/api/auth/login/google';
+  }
+
+
 }

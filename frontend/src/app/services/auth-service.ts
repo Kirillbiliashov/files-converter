@@ -31,6 +31,15 @@ export class AuthService {
       );
   }
 
+  processGoogleLogin(code: string) {
+    return this.http.post<{ token: string }>(`${this.apiUrl}/login/google/process`, { code: code })
+      .pipe(
+        tap(response => {
+          localStorage.setItem(this.tokenKey, response.token);
+        })
+      );
+  }
+
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }

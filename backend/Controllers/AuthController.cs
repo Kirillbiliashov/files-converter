@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using backend.BL.Integrations;
 using backend.Models.Db;
 using backend.Models.DTO;
 using Microsoft.AspNetCore.Identity;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
+using Google.Apis.Auth;
 
 namespace backend.Controllers
 {
@@ -22,10 +24,13 @@ namespace backend.Controllers
         private readonly IConfiguration _configuration;
         private readonly IMongoDatabase _db;
 
-        public AuthController(IConfiguration configuration, IMongoDatabase db)
+        private readonly GoogleSignInManager _googleSignInManager;
+
+        public AuthController(IConfiguration configuration, IMongoDatabase db, GoogleSignInManager googleSignInManager)
         {
             _configuration = configuration;
             _db = db;
+            _googleSignInManager = googleSignInManager;
         }
 
 
@@ -76,7 +81,42 @@ namespace backend.Controllers
             return Ok(new { token });
         }
 
+        [HttpGet("login/google")]
+        public async Task<IActionResult> LoginWithGoogle()
+        {
+            var redirectUrl = _googleSignInManager.GetLoginUrl();
+            return Redirect(redirectUrl);
+        }
 
+        [HttpPost("login/google/process")]
+        public async Task<IActionResult> ProcessGoogleLogin([FromBody] ProcessGoogleLoginBody body)
+        {
+            var accessCode = await _googleSignInManager.GetAccessCode(body.code);
+            var payload = await GoogleJsonWebSignature.ValidateAsync(accessCode);
+
+            if (payload == null)
+            {
+                return Unauthorized();
+            }
+            
+            var user = await _db.GetCollection<User>("users")
+            .Find(u => u.Email == payload.Email)
+            .SingleOrDefaultAsync();
+
+            if (user == null)
+            {
+                user = new User
+                {
+                    Username = $"{payload.GivenName} {payload.FamilyName}",
+                    Email = payload.Email
+                };
+                 await _db.GetCollection<User>("users").InsertOneAsync(user);
+            }
+
+            var token = GenerateJwtToken(user.Username);
+
+            return Ok(new { token });
+        }
 
         private string GenerateJwtToken(string username)
         {
@@ -106,5 +146,10 @@ namespace backend.Controllers
         }
 
 
+    }
+
+        public class ProcessGoogleLoginBody
+    {
+        public string code { get; set; }
     }
 }
