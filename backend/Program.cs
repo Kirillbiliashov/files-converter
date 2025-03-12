@@ -15,6 +15,7 @@ builder.Services.AddSingleton<IMongoClient>(sp =>
 builder.Services.AddScoped<IMongoDatabase>(sp => 
     sp.GetRequiredService<IMongoClient>().GetDatabase(builder.Configuration.GetValue<string>("MongoDbSettings:DatabaseName")));
 builder.Services.AddSingleton<GoogleSignInManager>();
+builder.Services.AddSingleton<DropboxSignInManager>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];

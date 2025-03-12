@@ -40,6 +40,15 @@ export class AuthService {
       );
   }
 
+  processDropboxLogin(code: string) {
+    return this.http.post<{ token: string }>(`${this.apiUrl}/login/dropbox/process`, { code: code })
+      .pipe(
+        tap(response => {
+          localStorage.setItem(this.tokenKey, response.token);
+        })
+      );
+  }
+
   getToken(): string | null {
     return localStorage.getItem(this.tokenKey);
   }

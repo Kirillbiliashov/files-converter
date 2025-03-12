@@ -104,5 +104,9 @@ export class LoginComponent {
     window.location.href = 'https://localhost:7099/api/auth/login/google';
   }
 
+  loginWithDropbox() {
+    window.location.href = 'https://localhost:7099/api/auth/login/dropbox';
+  }
+
 
 }
