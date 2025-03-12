@@ -1,56 +1,51 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace backend.BL.Integrations
 {
-    public class DropboxSignInManager
+    public class DropboxSignInManager : OAuthSignInManager
     {
-        private readonly IConfiguration _config;
-        private const string authUrl = "https://www.dropbox.com/oauth2/authorize";
-        private const string tokenUrl = "https://api.dropboxapi.com/oauth2/token";
-
-        public DropboxSignInManager(IConfiguration config) => _config = config;
-
-        public string GetLoginUrl()
+        public DropboxSignInManager(IConfiguration config) : base(config)
         {
-            var returnUrl = new Uri(_config["Authentication:Dropbox:RedirectUri"]);
-            // Build the Dropbox login URL.
-            var uriBuilder = authUrl;
-            uriBuilder += "?client_id=" + _config["Authentication:Dropbox:ClientId"];
-            uriBuilder += "&redirect_uri=" + returnUrl.GetLeftPart(UriPartial.Path);
-            uriBuilder += "&response_type=code";
-            uriBuilder += "&state=state"; // In production, generate and validate a unique state value.
-            // Optionally, add token_access_type=offline to get a refresh token.
-            // uriBuilder += "&token_access_type=offline";
-            return uriBuilder;
         }
 
-        public async Task<string?> GetAccessToken(string authCode)
+        protected override string? GetAccessTokenResult(string responseBody)
         {
-            var payload = new Dictionary<string, string>
-            {
-                { "code", authCode },
-                { "client_id", _config["Authentication:Dropbox:ClientId"] },
-                { "client_secret", _config["Authentication:Dropbox:ClientSecret"] },
-                { "redirect_uri", _config["Authentication:Dropbox:RedirectUri"] },
-                { "grant_type", "authorization_code" }
-            };
+            var tokenResult = JsonSerializer.Deserialize<DropboxTokenResponse>(responseBody);
+            return tokenResult?.AccessToken;
+        }
 
-            using var httpClient = new HttpClient();
-            var tokenResponse = await httpClient.PostAsync(tokenUrl, new FormUrlEncodedContent(payload));
-            var tokenResponseBody = await tokenResponse.Content.ReadAsStringAsync();
-
-            if (tokenResponse.IsSuccessStatusCode)
+        public override async Task<OAuthUserInfo?> GetUserInfo(string? accessToken)
+        {
+            if (string.IsNullOrWhiteSpace(accessToken))
             {
-                var tokenResult = JsonSerializer.Deserialize<DropboxTokenResponse>(tokenResponseBody);
-                return tokenResult?.AccessToken;
+                return null;
             }
 
-            return null;
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            var apiUrl = "https://api.dropboxapi.com/2/users/get_current_account";
+
+            var response = await httpClient.PostAsync(apiUrl, null);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var accountResponse = JsonSerializer.Deserialize<DropboxAccountResponse>(content);
+
+            return new OAuthUserInfo
+            {
+                Email = accountResponse.Email,
+                Username = accountResponse.Name.DisplayName
+            };
         }
     }
 
@@ -65,4 +60,29 @@ namespace backend.BL.Integrations
         [JsonPropertyName("account_id")]
         public string AccountId { get; set; }
     }
+
+    public class DropboxAccountResponse
+    {
+        [JsonPropertyName("account_id")]
+        public string AccountId { get; set; }
+
+        [JsonPropertyName("name")]
+        public DropboxAccountName Name { get; set; }
+
+        [JsonPropertyName("email")]
+        public string Email { get; set; }
+    }
+
+    public class DropboxAccountName
+    {
+        [JsonPropertyName("display_name")]
+        public string DisplayName { get; set; }
+
+        [JsonPropertyName("given_name")]
+        public string GivenName { get; set; }
+
+        [JsonPropertyName("surname")]
+        public string Surname { get; set; }
+    }
 }
+

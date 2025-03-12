@@ -3,14 +3,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth-service';
 
 @Component({
-  selector: 'app-google-auth-callback',
+  selector: 'app-oauth-callback',
   standalone: true,
   imports: [],
-  templateUrl: './google-auth-callback.component.html',
-  styleUrl: './google-auth-callback.component.css'
+  templateUrl: './oauth-callback.component.html',
+  styleUrl: './oauth-callback.component.css'
 })
-export class GoogleAuthCallbackComponent implements OnInit {
-
+export class OauthCallbackComponent implements OnInit {
   errorMessage: string | null = null;
 
   constructor(
@@ -19,14 +18,15 @@ export class GoogleAuthCallbackComponent implements OnInit {
     private router: Router
   ) { }
 
-
+  
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const authCode = params['code'];
+      const provider = params['state'];
       console.log(`auth code: ${authCode}`);
 
       setTimeout(() => {
-        this.authService.processGoogleLogin(authCode).subscribe({
+        this.authService.processOauthLogin(authCode, provider).subscribe({
           next: () => this.router.navigate(['/convert']),
           error: err => {
             this.errorMessage = err.error;
@@ -35,5 +35,4 @@ export class GoogleAuthCallbackComponent implements OnInit {
       }, 10000);
     });
   }
-
 }

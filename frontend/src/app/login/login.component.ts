@@ -101,11 +101,11 @@ export class LoginComponent {
 
 
   loginWithGoogle() {
-    window.location.href = 'https://localhost:7099/api/auth/login/google';
+    window.location.href = 'https://localhost:7099/api/auth/login/oauth?provider=Google';
   }
 
   loginWithDropbox() {
-    window.location.href = 'https://localhost:7099/api/auth/login/dropbox';
+    window.location.href = 'https://localhost:7099/api/auth/login/oauth?provider=Dropbox';
   }
 
 

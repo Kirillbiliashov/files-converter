@@ -4,57 +4,42 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Google.Apis.Auth;
 
 namespace backend.BL.Integrations
 {
-    public class GoogleSignInManager
+    public class GoogleSignInManager : OAuthSignInManager
     {
-        private IConfiguration _config;
-
-        private const string authUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-        private const string tokenUrl = "https://oauth2.googleapis.com/token";
-
-        public GoogleSignInManager(IConfiguration config) => _config = config;
-
-        public string GetLoginUrl()
+        public GoogleSignInManager(IConfiguration config) : base(config)
         {
-            var returnUrl = new Uri(_config["Authentication:Google:RedirectUri"]);
-            var defaultScopes = new[] { "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email" };
-            var uriBuilder = authUrl;
-            uriBuilder += "?client_id=" + _config["Authentication:Google:ClientId"];
-            uriBuilder += "&redirect_uri=" + returnUrl.GetLeftPart(UriPartial.Path);
-            uriBuilder += "&response_type=code";
-            uriBuilder += "&access_type=offline";
-            uriBuilder += "&include_granted_scopes=true";
-            uriBuilder += "&scope=" + string.Join(" ", defaultScopes);
-            uriBuilder += "&state=state";
-
-            return uriBuilder;
         }
 
-        public async Task<string?> GetAccessCode(string authCode)
+        protected override string? GetAccessTokenResult(string responseBody)
         {
-            var payload = new Dictionary<string, string>
-            {
-                { "code", authCode },
-                { "client_id", _config["Authentication:Google:ClientId"] },
-                { "client_secret", _config["Authentication:Google:ClientSecret"] },
-                { "redirect_uri", _config["Authentication:Google:RedirectUri"] },
-                { "grant_type", "authorization_code" }
-            };
+            var tokenResult = JsonSerializer.Deserialize<GoogleTokenResponse>(responseBody);
+            return tokenResult?.IdToken;
+        }
 
-            using var httpClient = new HttpClient();
-            var tokenResponse = await httpClient.PostAsync(tokenUrl, new FormUrlEncodedContent(payload));
-            var tokenResponseBody = await tokenResponse.Content.ReadAsStringAsync();
-
-            if (tokenResponse.IsSuccessStatusCode)
+        public override async Task<OAuthUserInfo?> GetUserInfo(string? accessToken)
+        {
+            if (string.IsNullOrWhiteSpace(accessToken))
             {
-                var tokenResult = JsonSerializer.Deserialize<GoogleTokenResponse>(tokenResponseBody);
-                return tokenResult?.IdToken;
+                return null;
             }
 
-            return null;
+            var payload = await GoogleJsonWebSignature.ValidateAsync(accessToken);
+            if (payload == null)
+            {
+                return null;
+            }
+
+            return new OAuthUserInfo
+            {
+                Email = payload.Email,
+                Username = $"{payload.GivenName} {payload.FamilyName}"
+            };
         }
+
     }
 
     public class GoogleTokenResponse

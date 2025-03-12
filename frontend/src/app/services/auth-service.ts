@@ -31,17 +31,12 @@ export class AuthService {
       );
   }
 
-  processGoogleLogin(code: string) {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/login/google/process`, { code: code })
-      .pipe(
-        tap(response => {
-          localStorage.setItem(this.tokenKey, response.token);
-        })
-      );
-  }
-
-  processDropboxLogin(code: string) {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/login/dropbox/process`, { code: code })
+  processOauthLogin(code: string, provider: string) {
+    const body = {
+      code: code,
+      provider: provider
+    }
+    return this.http.post<{ token: string }>(`${this.apiUrl}/login/oauth/process`, body)
       .pipe(
         tap(response => {
           localStorage.setItem(this.tokenKey, response.token);

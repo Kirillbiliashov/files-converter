@@ -27,20 +27,16 @@ namespace backend.Controllers
         private readonly IConfiguration _configuration;
         private readonly IMongoDatabase _db;
 
-        private readonly GoogleSignInManager _googleSignInManager;
-
-        private readonly DropboxSignInManager _dropboxSignInManager;
+        private readonly Func<string, OAuthSignInManager> _signInManagerFactory;
 
         public AuthController(
             IConfiguration configuration,
             IMongoDatabase db,
-            GoogleSignInManager googleSignInManager,
-            DropboxSignInManager dropboxSignInManager)
+            Func<string, OAuthSignInManager> signInManagerFactory)
         {
             _configuration = configuration;
             _db = db;
-            _googleSignInManager = googleSignInManager;
-            _dropboxSignInManager = dropboxSignInManager;
+            _signInManagerFactory = signInManagerFactory;
         }
 
 
@@ -91,34 +87,36 @@ namespace backend.Controllers
             return Ok(new { token });
         }
 
-        [HttpGet("login/google")]
-        public async Task<IActionResult> LoginWithGoogle()
+        [HttpGet("login/oauth")]
+        public async Task<IActionResult> InitiateOAuthFlow(string provider)
         {
-            var redirectUrl = _googleSignInManager.GetLoginUrl();
+            var manager = _signInManagerFactory(provider);
+            var redirectUrl = manager.GetLoginUrl(provider);
             return Redirect(redirectUrl);
         }
 
-        [HttpPost("login/google/process")]
+        [HttpPost("login/oauth/process")]
         public async Task<IActionResult> ProcessGoogleLogin([FromBody] ProcessOAuthLoginBody body)
         {
-            var accessCode = await _googleSignInManager.GetAccessCode(body.code);
-            var payload = await GoogleJsonWebSignature.ValidateAsync(accessCode);
+            var manager = _signInManagerFactory(body.provider);
+            var accessToken = await manager.GetAccessCode(body.provider, body.code);
+            var userInfo = await manager.GetUserInfo(accessToken);
 
-            if (payload == null)
+            if (userInfo == null)
             {
                 return Unauthorized();
             }
 
             var user = await _db.GetCollection<User>("users")
-            .Find(u => u.Email == payload.Email)
+            .Find(u => u.Email == userInfo.Email)
             .SingleOrDefaultAsync();
 
             if (user == null)
             {
                 user = new User
                 {
-                    Username = $"{payload.GivenName} {payload.FamilyName}",
-                    Email = payload.Email
+                    Username = userInfo.Username,
+                    Email = userInfo.Email
                 };
                 await _db.GetCollection<User>("users").InsertOneAsync(user);
             }
@@ -126,79 +124,6 @@ namespace backend.Controllers
             var token = GenerateJwtToken(user.Username);
 
             return Ok(new { token });
-        }
-
-
-        [HttpGet("login/dropbox")]
-        public async Task<IActionResult> LoginWithDropbox()
-        {
-            var redirectUrl = _dropboxSignInManager.GetLoginUrl();
-
-            return Redirect(redirectUrl);
-        }
-
-        [HttpPost("login/dropbox/process")]
-        public async Task<IActionResult> ProcessDropboxLogin([FromBody] ProcessOAuthLoginBody body)
-        {
-            var accessToken = await _dropboxSignInManager.GetAccessToken(body.code);
-
-            if (string.IsNullOrEmpty(accessToken))
-            {
-                return Unauthorized();
-            }
-
-            var dropboxUser = await GetDropboxUserInfo(accessToken);
-
-            if (dropboxUser == null)
-            {
-                return Unauthorized();
-            }
-
-            var user = await _db.GetCollection<User>("users")
-                .Find(u => u.Email == dropboxUser.Email)
-                .SingleOrDefaultAsync();
-
-            if (user == null)
-            {
-                user = new User
-                {
-                    Username = dropboxUser.Name, 
-                    Email = dropboxUser.Email
-                };
-                await _db.GetCollection<User>("users").InsertOneAsync(user);
-            }
-
-            var token = GenerateJwtToken(user.Username);
-            return Ok(new { token });
-        }
-
-
-        private async Task<DropboxUser> GetDropboxUserInfo(string accessToken)
-        {
-            using var httpClient = new HttpClient();
-            // Set the Authorization header with the access token.
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-
-            // Dropbox API endpoint to get the current account's details.
-            var apiUrl = "https://api.dropboxapi.com/2/users/get_current_account";
-
-            // This endpoint expects a POST request with no content.
-            var response = await httpClient.PostAsync(apiUrl, null);
-            if (!response.IsSuccessStatusCode)
-            {
-                // You might want to log the error or throw an exception here.
-                return null;
-            }
-
-            var content = await response.Content.ReadAsStringAsync();
-            var accountResponse = JsonSerializer.Deserialize<DropboxAccountResponse>(content);
-
-            // Map the response to our simplified DropboxUser model.
-            return new DropboxUser
-            {
-                Email = accountResponse.Email,
-                Name = accountResponse.Name.DisplayName
-            };
         }
 
         private string GenerateJwtToken(string username)
@@ -234,37 +159,8 @@ namespace backend.Controllers
     public class ProcessOAuthLoginBody
     {
         public string code { get; set; }
+
+        public string provider { get; set; }
     }
 
-
-    public class DropboxUser
-    {
-        public string Email { get; set; }
-        public string Name { get; set; }
-    }
-
-
-    public class DropboxAccountResponse
-    {
-        [JsonPropertyName("account_id")]
-        public string AccountId { get; set; }
-
-        [JsonPropertyName("name")]
-        public DropboxAccountName Name { get; set; }
-
-        [JsonPropertyName("email")]
-        public string Email { get; set; }
-    }
-
-    public class DropboxAccountName
-    {
-        [JsonPropertyName("display_name")]
-        public string DisplayName { get; set; }
-
-        [JsonPropertyName("given_name")]
-        public string GivenName { get; set; }
-
-        [JsonPropertyName("surname")]
-        public string Surname { get; set; }
-    }
 }

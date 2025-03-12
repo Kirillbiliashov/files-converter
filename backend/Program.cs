@@ -63,6 +63,22 @@ builder.Services.AddScoped<Func<string, IFileConverter>>(provider => format =>
         : provider.GetRequiredService<LibreOfficeFileConverter>();
 });
 
+builder.Services.AddScoped<GoogleSignInManager>();
+builder.Services.AddScoped<DropboxSignInManager>();
+builder.Services.AddScoped<Func<string, OAuthSignInManager>>(provider => integration =>
+{
+    if (integration == "Google")
+    {
+        return provider.GetRequiredService<GoogleSignInManager>();
+    }
+    if (integration == "Dropbox")
+    {
+        return provider.GetRequiredService<DropboxSignInManager>();
+    }
+
+    return null;
+});
+
 builder.Services.AddCors(options =>
             {
                 options.AddPolicy("CorsApi",
