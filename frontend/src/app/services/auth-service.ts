@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { CurrentUser } from '../models/current-user';
 
 @Injectable({
   providedIn: 'root'
@@ -9,14 +10,16 @@ import { Observable } from 'rxjs';
 export class AuthService {
   private apiUrl = 'https://localhost:7099/api/auth';
   private tokenKey = 'jwtToken';
+  private userKey = 'currentUser';
 
   constructor(private http: HttpClient) { }
 
   login(email: string, password: string): Observable<{ token: string }> {
-    return this.http.post<{ token: string }>(`${this.apiUrl}/login`, { email, password })
+    return this.http.post<{ token: string, user: CurrentUser }>(`${this.apiUrl}/login`, { email, password })
       .pipe(
         tap(response => {
           localStorage.setItem(this.tokenKey, response.token);
+          localStorage.setItem(this.userKey, JSON.stringify(response.user));
         })
       );
   }
@@ -48,7 +51,16 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
+
+  getCurrentUser(): CurrentUser | null {
+    const userValue = localStorage.getItem(this.userKey);
+    if (!userValue) return null;
+
+    return JSON.parse(userValue);
+  }
+
   logout() {
     localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
   }
 }

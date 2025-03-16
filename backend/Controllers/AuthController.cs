@@ -58,9 +58,10 @@ namespace backend.Controllers
             user.PasswordHash = hasher.HashPassword(user, request.Password);
 
             await _db.GetCollection<User>("users").InsertOneAsync(user);
+            user.PasswordHash = null;
 
             var token = GenerateJwtToken(user.IdInternal);
-            return Ok(new { token });
+            return Ok(new { token, user });
         }
 
 
@@ -84,7 +85,8 @@ namespace backend.Controllers
             }
 
             var token = GenerateJwtToken(user.IdInternal);
-            return Ok(new { token });
+            user.PasswordHash = null;
+            return Ok(new { token, user });
         }
 
         [HttpGet("login/oauth")]
@@ -123,7 +125,7 @@ namespace backend.Controllers
 
             var token = GenerateJwtToken(user.IdInternal);
 
-            return Ok(new { token });
+            return Ok(new { token, user });
         }
 
         private string GenerateJwtToken(string userId)
@@ -153,7 +155,6 @@ namespace backend.Controllers
             var tokenResponse =  new JwtSecurityTokenHandler().WriteToken(token);
             return tokenResponse;
         }
-
 
     }
 
