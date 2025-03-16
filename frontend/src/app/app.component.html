@@ -11,6 +11,7 @@
 <body >
   <div class="row flex-grow-1">
     <main  >
+      <app-navbar *ngIf="this.showNavbar"></app-navbar>
       <router-outlet></router-outlet>
     </main>
   </div>
