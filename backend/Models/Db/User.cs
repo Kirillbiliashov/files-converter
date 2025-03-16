@@ -7,13 +7,8 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace backend.Models.Db
 {
-    public class User
+    public class User: MongoDBDocument
     {
-
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public ObjectId Id { get; set; }
-
         [BsonElement("username")]
         public string Username { get; set; }  
 
@@ -21,6 +16,7 @@ namespace backend.Models.Db
         public string Email { get; set; }
         
         [BsonElement("passwordHash")]
+        [BsonIgnoreIfNull]
         public string PasswordHash { get; set; } 
 
         [BsonElement("created")]

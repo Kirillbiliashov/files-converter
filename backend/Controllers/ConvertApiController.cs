@@ -3,11 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Tasks;
 using backend.BL.Converter;
+using backend.Models.Db;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Driver;
 
 namespace backend.Controllers
 {
@@ -40,15 +45,34 @@ namespace backend.Controllers
         };
 
         private readonly Func<string, IFileConverter> _converterFactory;
+        private readonly IMongoDatabase _db;
 
-        public ConvertApiController(Func<string, IFileConverter> converterFactory)
+        public string? UserId 
         {
-            _converterFactory = converterFactory;
+            get 
+            {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            return identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            }
         }
 
+        public ConvertApiController(Func<string, IFileConverter> converterFactory, IMongoDatabase db)
+        {
+            _converterFactory = converterFactory;
+            _db = db;
+        }
+
+        [Authorize]
         [HttpPost("")]
         public async Task<IActionResult> ConvertFile(IFormFile file, [FromForm] string outputFormat)
         {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var userId = identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
             try
             {
                 var conversionResult = await ConvertFileAsync(file, outputFormat.ToLower());
@@ -109,6 +133,8 @@ namespace backend.Controllers
 
         private async Task<ConversionResult> ConvertFileAsync(IFormFile file, string outputFormat)
         {
+            var sw = Stopwatch.StartNew();
+
             var inputFileExtension = Path.GetExtension(file.FileName);
             var tempPath = Path.GetTempPath();
             var tempId = Guid.NewGuid();
@@ -123,7 +149,20 @@ namespace backend.Controllers
                 }
 
                 var converter = _converterFactory(outputFormat);
-                return await converter.ConvertFile(inputFilePath, outputFilePath);
+                var conversionResult = await converter.ConvertFile(inputFilePath, outputFilePath);
+                var timeElapsed = sw.ElapsedMilliseconds;
+
+                var conversion = new Conversion
+                {
+                    UserId = ObjectId.Parse(UserId),
+                    Date = DateTime.UtcNow,
+                    InputFormat = Path.GetExtension(file.FileName).ToLower().Substring(1),
+                    OutputFormat = outputFormat.ToLower(),
+                    TimeMsecs = timeElapsed
+                };
+                await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
+
+                return conversionResult;
             }
             catch (Exception e)
             {
@@ -144,26 +183,6 @@ namespace backend.Controllers
                 }
             }
         }
-
-
-        [HttpGet("key")]
-        public async Task<IActionResult> GenerateSecurityKey()
-        {
-            var key = GenerateSecureKey();
-            return Ok(key);
-        }
-
-
-        static string GenerateSecureKey(int keySize = 32) // 32 bytes = 256 bits
-        {
-            byte[] key = new byte[keySize];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(key);
-            }
-            return Convert.ToBase64String(key);
-        }
-
 
 
     }

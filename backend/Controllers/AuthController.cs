@@ -59,7 +59,7 @@ namespace backend.Controllers
 
             await _db.GetCollection<User>("users").InsertOneAsync(user);
 
-            var token = GenerateJwtToken(user.Username);
+            var token = GenerateJwtToken(user.IdInternal);
             return Ok(new { token });
         }
 
@@ -83,7 +83,7 @@ namespace backend.Controllers
                 return Unauthorized("Invalid credentials.");
             }
 
-            var token = GenerateJwtToken(user.Username);
+            var token = GenerateJwtToken(user.IdInternal);
             return Ok(new { token });
         }
 
@@ -121,12 +121,12 @@ namespace backend.Controllers
                 await _db.GetCollection<User>("users").InsertOneAsync(user);
             }
 
-            var token = GenerateJwtToken(user.Username);
+            var token = GenerateJwtToken(user.IdInternal);
 
             return Ok(new { token });
         }
 
-        private string GenerateJwtToken(string username)
+        private string GenerateJwtToken(string userId)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
             var secretKey = jwtSettings["SecretKey"];
@@ -136,7 +136,7 @@ namespace backend.Controllers
 
             var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, username),
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
@@ -150,7 +150,8 @@ namespace backend.Controllers
                 expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: creds);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenResponse =  new JwtSecurityTokenHandler().WriteToken(token);
+            return tokenResponse;
         }
 
 

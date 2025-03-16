@@ -28,8 +28,17 @@ export class ConvertComponent {
       this.selectedFiles.push(...Array.from(input.files).map(f => 
         new FileItem(f, this.getSupportedFormats(f.name))
       ));
+
+      const body = Array.from(input.files).map(f => ({
+        type: "upload",
+        name: f.name,
+        size: f.size
+      }));
+      this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
     }
   }
+
+
 
 
   getSupportedFormats(filename: string) {
@@ -87,6 +96,14 @@ export class ConvertComponent {
     link.download = fileName;
     link.click();
     window.URL.revokeObjectURL(url);
+
+    const body = [{
+      name: fileItem.file.name,
+      size: fileItem.file.size,
+      type: "download"
+      }
+    ];
+    this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
   }
 
   deleteFile(fileItem: FileItem) {
