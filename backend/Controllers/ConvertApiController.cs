@@ -21,29 +21,6 @@ namespace backend.Controllers
     public class ConvertApiController : ControllerBase
     {
 
-        private static readonly Dictionary<string, string> _fileMimeTypeMap = new()
-        {
-            { "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
-            { "doc",  "application/msword"},
-            { "rtf",  "application/rtf"},
-            { "txt", "text/plain"},
-            { "odt", "application/vnd.oasis.opendocument.text"},
-            { "pdf",   "application/pdf"},
-            { "epub", "application/epub+zip" },
-            { "html",  "text/html"},
-            { "xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
-            { "xls",   "application/vnd.ms-excel" },
-            { "ods",  "application/vnd.oasis.opendocument.spreadsheet"},
-            { "csv",  "text/csv" },
-            { "tsv",  "text/tab-separated-values" },
-            { "pptx", "application/vnd.openxmlformats-officedocument.presentationml.presentation"},
-            { "ppt",   "application/vnd.ms-powerpoint"},
-            { "odp",  "application/vnd.oasis.opendocument.presentation"},
-            { "png", "image/png" },
-            { "jpg", "image/jpeg" },
-            { "jpeg", "image/jpeg" }
-        };
-
         private readonly Func<string, IFileConverter> _converterFactory;
         private readonly IMongoDatabase _db;
 
@@ -158,6 +135,9 @@ namespace backend.Controllers
                     Date = DateTime.UtcNow,
                     InputFormat = Path.GetExtension(file.FileName).ToLower().Substring(1),
                     OutputFormat = outputFormat.ToLower(),
+                    Filename = file.FileName,
+                    FileSize = conversionResult.OutputBytes.Length,
+                    Status = "success",
                     TimeMsecs = timeElapsed
                 };
                 await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
