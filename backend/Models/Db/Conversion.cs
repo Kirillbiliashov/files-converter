@@ -18,6 +18,17 @@ namespace backend.Models.Db
         [BsonElement("outputFormat")]
         public string OutputFormat { get; set; }
 
+        [BsonElement("status")]
+        public string Status { get; set; }
+
+        [BsonElement("filename")]
+        [BsonIgnoreIfNull]
+        public string Filename { get; set; }
+
+        [BsonElement("fileSize")]
+        [BsonIgnoreIfNull]
+        public int FileSize { get; set; }
+
         [BsonElement("userId")]
         public ObjectId UserId { get; set; } 
 

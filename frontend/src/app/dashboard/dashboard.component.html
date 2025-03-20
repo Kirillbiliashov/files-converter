@@ -1,0 +1,367 @@
+<style>
+  .nav-tabs .nav-link {
+    border-radius: 8px 8px 0 0;
+    /* Rounded top corners */
+  }
+
+  .nav-tabs .nav-link.active {
+    background-color: #f5f7fb !important;
+    color: #0d6efd !important;
+    /* border-color: #f5f7fb !important;
+    border-bottom: #0d6efd !important; */
+  }
+
+  .nav-tabs .nav-link:not(.active) {
+    color: gray !important;
+  }
+
+  .btn-light {
+    background-color: white;
+    border: 1px solid rgb(222, 219, 219);
+    border-radius: 8px;
+  }
+</style>
+
+
+
+<div class="mx-4 mt-5 d-flex flex-column gap-4">
+  <div class="d-flex justify-content-between">
+    <h3 class="fw-bold">Dashboard</h3>
+    <a class="btn btn-primary" [routerLink]="'/convert'">Convert new files</a>
+  </div>
+
+
+  <div class="container my-3" *ngIf="this.dashboardData">
+    <ul class="nav nav-tabs mb-4" id="dashboardTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button"
+          role="tab" aria-controls="overview" aria-selected="true">
+          Overview
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics" type="button"
+          role="tab" aria-controls="analytics" aria-selected="false">
+          Analytics
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button"
+          role="tab" aria-controls="activity" aria-selected="false">
+          Activity
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="dashboardTabContent">
+      <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+        <div class="row g-3">
+          <div class="col-sm-6 col-md-6">
+            <div class="card text-center">
+              <div class="card-body d-flex flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="fw-semibold">Total Conversions</h6>
+                  <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M9 17H15M9 13H15M9 9H10M13 3H8.2C7.0799 3 6.51984 3 6.09202 3.21799C5.71569 3.40973 5.40973 3.71569 5.21799 4.09202C5 4.51984 5 5.0799 5 6.2V17.8C5 18.9201 5 19.4802 5.21799 19.908C5.40973 20.2843 5.71569 20.5903 6.09202 20.782C6.51984 21 7.0799 21 8.2 21H15.8C16.9201 21 17.4802 21 17.908 20.782C18.2843 20.5903 18.5903 20.2843 18.782 19.908C19 19.4802 19 18.9201 19 17.8V9M13 3L19 9M13 3V7.4C13 7.96005 13 8.24008 13.109 8.45399C13.2049 8.64215 13.3578 8.79513 13.546 8.89101C13.7599 9 14.0399 9 14.6 9H19"
+                        stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </g>
+                  </svg>
+                </div>
+                <div></div>
+                <h3 class="fw-bold" >{{dashboardData.conversions.total}}</h3>
+                <small class="text-muted" *ngIf="dashboardData.conversions.difference">{{dashboardData.conversions.difference}}% from last month</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-md-6">
+            <div class="card text-center">
+              <div class="card-body  d-flex flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="fw-semibold">Files Uploaded</h6>
+                  <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M3 15C3 17.8284 3 19.2426 3.87868 20.1213C4.75736 21 6.17157 21 9 21H15C17.8284 21 19.2426 21 20.1213 20.1213C21 19.2426 21 17.8284 21 15"
+                        stroke="#0d6efd" stroke-width="1.6799999999999997" stroke-linecap="round"
+                        stroke-linejoin="round"></path>
+                      <path d="M12 16V3M12 3L16 7.375M12 3L8 7.375" stroke="#0d6efd" stroke-width="1.6799999999999997"
+                        stroke-linecap="round" stroke-linejoin="round"></path>
+                    </g>
+                  </svg>
+                </div>
+                <h3 class="fw-bold">{{dashboardData.uploaded.total}}</h3>
+                <small class="text-muted" *ngIf="dashboardData.uploaded.difference">{{dashboardData.uploaded.difference}}% from last month</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-md-6">
+            <div class="card text-center">
+              <div class="card-body  d-flex flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="fw-semibold">Files Downloaded</h6>
+                  <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path
+                        d="M3 15C3 17.8284 3 19.2426 3.87868 20.1213C4.75736 21 6.17157 21 9 21H15C17.8284 21 19.2426 21 20.1213 20.1213C21 19.2426 21 17.8284 21 15"
+                        stroke="#0d6efd" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                      <path d="M12 3V16M12 16L16 11.625M12 16L8 11.625" stroke="#0d6efd" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round"></path>
+                    </g>
+                  </svg>
+                </div>
+                <h3 class="fw-bold">{{dashboardData.downloaded.total}}</h3>
+                <small class="text-muted" *ngIf="dashboardData.downloaded.difference">{{dashboardData.downloaded.difference}}% from last month</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-md-6">
+            <div class="card text-center">
+              <div class="card-body d-flex flex-column align-items-start">
+                <div class="d-flex w-100 justify-content-between">
+                  <h6 class="fw-semibold">Success Rate</h6>
+                  <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path d="M12 5L12 19" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"></path>
+                      <path d="M8 16L12 20L16 16" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"></path>
+                      <path d="M16 8L12 4L8 8" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round"></path>
+                    </g>
+                  </svg>
+                </div>
+                <h3 class="fw-bold">{{this.dashboardData.successRate.total}}%</h3>
+                <small class="text-muted" *ngIf="this.dashboardData.successRate.difference">{{this.dashboardData.successRate.difference}}% from last month</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-body">
+            <h5 class="card-title">Recent Activity</h5>
+            <span class="text-muted">Your most recent file conversions</span>
+            <div class="table-responsive mt-3">
+              <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>File Name</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of this.dashboardData.activity | slice:0:5">
+                    <td>{{row.filename}}</td>
+                    <td>{{row.inputFormat}} → {{row.outputFormat}}</td>
+                    <td>{{row.date | date}}</td>
+                    <td>
+                      <span *ngIf="row.status == 'success'" class="badge bg-success">Success</span>
+                      <span *ngIf="row.status == 'failed'" class="badge bg-success">Failed</span>
+                    </td>
+                    <td>
+                      <button class="btn btn-light btn-sm">
+                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <path
+                              d="M3 15C3 17.8284 3 19.2426 3.87868 20.1213C4.75736 21 6.17157 21 9 21H15C17.8284 21 19.2426 21 20.1213 20.1213C21 19.2426 21 17.8284 21 15"
+                              stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M12 3V16M12 16L16 11.625M12 16L8 11.625" stroke="#000000" stroke-width="1.5"
+                              stroke-linecap="round" stroke-linejoin="round"></path>
+                          </g>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="analytics" role="tabpanel" aria-labelledby="analytics-tab">
+        <div class="row">
+          <div class="col-8">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Most Popular Conversions</h5>
+                <p class="text-muted">Distribution of file format conversions</p>
+                <div class="d-flex align-items-center justify-content-center" style="width: 100%; height: 325px;">
+                  <canvas id="myChart" style="width: 30px; height: 30px"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-4 mb-4">
+            <div class="card h-100">
+              <div class="card-body">
+                <h5 class="card-title">Conversion Details</h5>
+                <p class="text-muted">Additional statistics about your conversions</p>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex flex-column w-100">
+                      <span class="fw-semibold">Most Converted Format</span>
+                      <div class="d-flex w-100 justify-content-between">
+                        <span class="text-muted">{{this.mostConvertedFormat}}</span>
+                        <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <path
+                              d="M9 17H15M9 13H15M9 9H10M13 3H8.2C7.0799 3 6.51984 3 6.09202 3.21799C5.71569 3.40973 5.40973 3.71569 5.21799 4.09202C5 4.51984 5 5.0799 5 6.2V17.8C5 18.9201 5 19.4802 5.21799 19.908C5.40973 20.2843 5.71569 20.5903 6.09202 20.782C6.51984 21 7.0799 21 8.2 21H15.8C16.9201 21 17.4802 21 17.908 20.782C18.2843 20.5903 18.5903 20.2843 18.782 19.908C19 19.4802 19 18.9201 19 17.8V9M13 3L19 9M13 3V7.4C13 7.96005 13 8.24008 13.109 8.45399C13.2049 8.64215 13.3578 8.79513 13.546 8.89101C13.7599 9 14.0399 9 14.6 9H19"
+                              stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                          </g>
+                        </svg>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div class="d-flex flex-column">
+                        <span class="fw-semibold">Space Used</span>
+                        <span class="text-muted">{{this.storageUsed | formatBytes}}</span>
+                      </div>
+                      <svg width="16px" height="16px" viewBox="0 0 24 24" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" fill="#0d6efd" stroke="#0d6efd"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><defs><style>.cls-1{fill:none;stroke:#0d6efd;stroke-miterlimit:10;stroke-width:1.91px;}.cls-2{fill:#0d6efd;}</style></defs><rect class="cls-1" x="4.36" y="16.77" width="15.27" height="5.73" rx="1.91"></rect><path class="cls-1" d="M19.64,18.68V3.41A1.91,1.91,0,0,0,17.73,1.5H6.27A1.91,1.91,0,0,0,4.36,3.41V18.68"></path><line class="cls-1" x1="13.91" y1="19.64" x2="17.73" y2="19.64"></line><circle class="cls-2" cx="7.23" cy="19.64" r="0.95"></circle></g></svg>
+                    </div>
+                    
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div class="d-flex flex-column">
+                        <span class="fw-semibold">Average File Size</span>
+                        <span class="text-muted">{{this.averageFileSize | formatBytes}}</span>
+                      </div>
+                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                        <g id="SVGRepo_iconCarrier">
+                          <path
+                            d="M9 17H15M9 13H15M9 9H10M13 3H8.2C7.0799 3 6.51984 3 6.09202 3.21799C5.71569 3.40973 5.40973 3.71569 5.21799 4.09202C5 4.51984 5 5.0799 5 6.2V17.8C5 18.9201 5 19.4802 5.21799 19.908C5.40973 20.2843 5.71569 20.5903 6.09202 20.782C6.51984 21 7.0799 21 8.2 21H15.8C16.9201 21 17.4802 21 17.908 20.782C18.2843 20.5903 18.5903 20.2843 18.782 19.908C19 19.4802 19 18.9201 19 17.8V9M13 3L19 9M13 3V7.4C13 7.96005 13 8.24008 13.109 8.45399C13.2049 8.64215 13.3578 8.79513 13.546 8.89101C13.7599 9 14.0399 9 14.6 9H19"
+                            stroke="#0d6efd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </g>
+                      </svg>
+                    </div>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div class="d-flex flex-column">
+                        <span class="fw-semibold">Most Active Day</span>
+                        <span class="text-muted">{{this.mostActiveDay}}</span>
+                      </div>
+                      <svg width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M3 9H21M7 3V5M17 3V5M6 12H8M11 12H13M16 12H18M6 15H8M11 15H13M16 15H18M6 18H8M11 18H13M16 18H18M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"></path> </g></svg>
+                    </div>
+                  </li>
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div class="d-flex flex-column">
+                        <span class="fw-semibold">Most Active Time</span>
+                        <span class="text-muted">{{this.mostActiveTime}}</span>
+                      </div>
+                      <svg width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M12 8V12L15 15" stroke="#0d6efd" stroke-width="2" stroke-linecap="round"></path> <circle cx="12" cy="12" r="9" stroke="#0d6efd" stroke-width="2"></circle> </g></svg>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="activity" role="tabpanel" aria-labelledby="activity-tab">
+        <div class="card mt-4">
+          <div class="card-body">
+            <h5 class="card-title">All Activity</h5>
+            <span class="text-muted">Complete history of your file conversions</span>
+            <div class="table-responsive mt-3">
+              <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                  <tr>
+                    <th>File Name</th>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of this.dashboardData.activity">
+                    <td>{{row.filename}}</td>
+                    <td>{{row.inputFormat}} → {{row.outputFormat}}</td>
+                    <td>{{row.date | date}}</td>
+                    <td>
+                      <span *ngIf="row.status == 'success'" class="badge bg-success">Success</span>
+                      <span *ngIf="row.status == 'failed'" class="badge bg-success">Failed</span>
+                    </td>
+                    <td>
+                      <button class="btn btn-light btn-sm">
+                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                          <g id="SVGRepo_iconCarrier">
+                            <path
+                              d="M3 15C3 17.8284 3 19.2426 3.87868 20.1213C4.75736 21 6.17157 21 9 21H15C17.8284 21 19.2426 21 20.1213 20.1213C21 19.2426 21 17.8284 21 15"
+                              stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M12 3V16M12 16L16 11.625M12 16L8 11.625" stroke="#000000" stroke-width="1.5"
+                              stroke-linecap="round" stroke-linejoin="round"></path>
+                          </g>
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+
+<script>
+  let chart = bb.generate({
+      data: {
+          columns: [
+              ["Blue", 2],
+              ["orange", 4],
+              ["green", 3],
+          ],
+          type: "donut",
+          onclick: function (d, i) {
+              console.log("onclick", d, i);
+          },
+          onover: function (d, i) {
+              console.log("onover", d, i);
+          },
+          onout: function (d, i) {
+              console.log("onout", d, i);
+          },
+      },
+      donut: {
+          title: "70",
+      },
+      bindto: "#donut-chart",
+  });
+</script>
