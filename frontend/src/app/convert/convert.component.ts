@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { FormatBytesPipe } from '../pipes/format-bytes-pipe';
 import { FileItem } from '../models/file-item';
 import * as JSZip from 'jszip';
+import { GooglePickerService } from '../services/google-picker-service';
+import { FileAdapterService } from '../services/file-adapter-service';
 
 @Component({
   selector: 'app-convert',
@@ -14,20 +16,64 @@ import * as JSZip from 'jszip';
   templateUrl: './convert.component.html',
   styleUrl: './convert.component.css'
 })
-export class ConvertComponent {
+export class ConvertComponent implements OnInit {
   selectedFiles: FileItem[] = [];
   fileBlob: Blob | null = null;
   private allConvertFormats = ["PDF", "DOCX", "CSV", "XLSX", "TXT", "RTF", "HTML", "EPUB", "PNG", "JPG"];
   selectedFileName: string | undefined;
+  private accessToken!: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private googlePickerService: GooglePickerService,
+    private fileAdapterService: FileAdapterService,
+    private cdr: ChangeDetectorRef) { }
+
+  async ngOnInit() {
+
+    this.http.get<{ accessToken: string }>(`https://localhost:7099/api/access-token?provider=Google`)
+      .subscribe({
+        next: async (response) => {
+          this.accessToken = response.accessToken;
+          await this.googlePickerService.loadPicker();
+        },
+        error: (error) => {
+          console.error('Error:', error);
+        }
+      });
+
+    this.googlePickerService.fileSelected$.subscribe((googleFile) => {
+      console.log('File selected in component:', googleFile);
+
+      this.fileAdapterService.adaptFile(googleFile, this.accessToken)
+        .subscribe({
+          next: blobFile => {
+            this.selectedFiles.push(...Array.from([blobFile]).map(f =>
+              new FileItem(f, this.getSupportedFormats(f.name))
+            ));
+            this.cdr.detectChanges();
+            console.log(`selected files, `, this.selectedFiles);
+          },
+          error: err => {
+            console.error('Error fetching file:', err);
+          }
+        });
+
+    });
+  }
+
+  selectGoogleFile() {
+    this.googlePickerService.createPicker(this.accessToken);
+  }
 
   onFileSelected(event: Event) {
+    console.log(`on file selected`)
     const input = event.target as HTMLInputElement;
     if (input.files) {
-      this.selectedFiles.push(...Array.from(input.files).map(f => 
+      this.selectedFiles.push(...Array.from(input.files).map(f =>
         new FileItem(f, this.getSupportedFormats(f.name))
       ));
+      console.log(`selected file`)
 
       const body = Array.from(input.files).map(f => ({
         type: "upload",
@@ -37,9 +83,6 @@ export class ConvertComponent {
       this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
     }
   }
-
-
-
 
   getSupportedFormats(filename: string) {
     const fileExt = this.getFileExtension(filename);
@@ -101,10 +144,11 @@ export class ConvertComponent {
       name: fileItem.file.name,
       size: fileItem.file.size,
       type: "download"
-      }
+    }
     ];
     this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
   }
+
 
   deleteFile(fileItem: FileItem) {
     this.selectedFiles = this.selectedFiles.filter(f => f != fileItem);
@@ -117,7 +161,7 @@ export class ConvertComponent {
       fileName: fileItem.file.name,
       outputFormat: fileItem.selectedFormat
     }));
-  
+
     this.selectedFiles.forEach(fileItem => {
       formData.append('files', fileItem.file, fileItem.file.name);
       fileItem.status = "Converting";
@@ -131,12 +175,12 @@ export class ConvertComponent {
           if (response.body) {
             JSZip.loadAsync(response.body).then(zip => {
               Object.keys(zip.files).forEach(async fileName => {
-                const fileItem = this.selectedFiles.find(f => 
+                const fileItem = this.selectedFiles.find(f =>
                   this.getFileNameWithoutExt(f.file.name) == this.getFileNameWithoutExt(fileName));
-                  if (fileItem) {
-                    fileItem.convertedBlob = await zip.files[fileName].async('blob');
-                    fileItem.status = "Converted";
-                  }
+                if (fileItem) {
+                  fileItem.convertedBlob = await zip.files[fileName].async('blob');
+                  fileItem.status = "Converted";
+                }
               });
             }).catch(error => {
               console.error('Error reading ZIP:', error);

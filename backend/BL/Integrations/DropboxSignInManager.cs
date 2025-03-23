@@ -14,12 +14,6 @@ namespace backend.BL.Integrations
         {
         }
 
-        protected override string? GetAccessTokenResult(string responseBody)
-        {
-            var tokenResult = JsonSerializer.Deserialize<DropboxTokenResponse>(responseBody);
-            return tokenResult?.AccessToken;
-        }
-
         public override async Task<OAuthUserInfo?> GetUserInfo(string? accessToken)
         {
             if (string.IsNullOrWhiteSpace(accessToken))

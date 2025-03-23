@@ -17,6 +17,7 @@ using Google.Apis.Auth;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using MongoDB.Bson;
 
 namespace backend.Controllers
 {
@@ -101,8 +102,8 @@ namespace backend.Controllers
         public async Task<IActionResult> ProcessGoogleLogin([FromBody] ProcessOAuthLoginBody body)
         {
             var manager = _signInManagerFactory(body.provider);
-            var accessToken = await manager.GetAccessCode(body.provider, body.code);
-            var userInfo = await manager.GetUserInfo(accessToken);
+            var accessTokenResponse = await manager.GetAccessTokenResponse(body.provider, body.code);
+            var userInfo = await manager.GetUserInfo(accessTokenResponse?.AccessToken);
 
             if (userInfo == null)
             {
@@ -123,9 +124,29 @@ namespace backend.Controllers
                 await _db.GetCollection<User>("users").InsertOneAsync(user);
             }
 
+            await UpsertAccessToken(accessTokenResponse, user.IdInternal, body.provider);
+
             var token = GenerateJwtToken(user.IdInternal);
 
             return Ok(new { token, user });
+        }
+
+        private async Task UpsertAccessToken(AccessTokenResponse response, string userId, string provider)
+        {
+            var parsedUserId = ObjectId.Parse(userId);
+            var filter = Builders<AccessToken>.Filter.Eq(t => t.UserId, parsedUserId);
+
+            var update = Builders<AccessToken>.Update
+                .Set(t => t.Token, response.AccessToken)
+                .Set(t => t.RefreshToken, response.RefreshToken)
+                .Set(t => t.TokenExpiration, DateTime.UtcNow.AddSeconds(response.ExpiresIn))
+                .Set(t => t.ConnectedAt, DateTime.UtcNow)
+                .Set(t => t.Provider, provider)
+                .SetOnInsert(t => t.UserId, parsedUserId);
+
+            var options = new UpdateOptions { IsUpsert = true };
+
+            await _db.GetCollection<AccessToken>("accessTokens").UpdateOneAsync(filter, update, options);
         }
 
         private string GenerateJwtToken(string userId)
@@ -152,7 +173,7 @@ namespace backend.Controllers
                 expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: creds);
 
-            var tokenResponse =  new JwtSecurityTokenHandler().WriteToken(token);
+            var tokenResponse = new JwtSecurityTokenHandler().WriteToken(token);
             return tokenResponse;
         }
 
