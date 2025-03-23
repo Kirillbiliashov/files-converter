@@ -13,8 +13,8 @@ export class FileAdapterService {
 
     adaptFile(customFile: ICustomFile, accessToken: string): Observable<File> {
         let url: string;
-
         if (this.isNativeGoogleFile(customFile.mimeType)) {
+            this.ensureFilenameExtension(customFile);
             const exportMimeType = this.getExportMimeType(customFile.mimeType);
             customFile.mimeType = exportMimeType;
             url = `https://www.googleapis.com/drive/v3/files/${customFile.id}/export?mimeType=${encodeURIComponent(exportMimeType)}`;
@@ -34,12 +34,28 @@ export class FileAdapterService {
         );
     }
 
+    private ensureFilenameExtension(file: ICustomFile) {
+        const mimeTypeToExtension: { [key: string]: string } = {
+            'application/vnd.google-apps.document': '.docx',      // Google Docs -> .docx
+            'application/vnd.google-apps.spreadsheet': '.xlsx',    // Google Sheets -> .xlsx
+            'application/vnd.google-apps.presentation': '.pptx',   // Google Slides -> .pptx
+            'application/vnd.google-apps.photo': '.jpg', 
+             'application/vnd.google-apps.drawing': '.png'
+        };
+
+        if (!file.name.includes('.') && mimeTypeToExtension[file.mimeType]) {
+            const extension = mimeTypeToExtension[file.mimeType];
+            file.name += extension;
+        }
+    }
+
     private isNativeGoogleFile(mimeType: string): boolean {
         const nativeMimeTypes = [
             'application/vnd.google-apps.document',
             'application/vnd.google-apps.spreadsheet',
             'application/vnd.google-apps.presentation',
-            'application/vnd.google-apps.drawing'
+            'application/vnd.google-apps.drawing',
+            'application/vnd.google-apps.photo'
         ];
         return nativeMimeTypes.includes(mimeType);
     }

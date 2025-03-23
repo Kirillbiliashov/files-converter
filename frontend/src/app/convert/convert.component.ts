@@ -48,11 +48,8 @@ export class ConvertComponent implements OnInit {
       this.fileAdapterService.adaptFile(googleFile, this.accessToken)
         .subscribe({
           next: blobFile => {
-            this.selectedFiles.push(...Array.from([blobFile]).map(f =>
-              new FileItem(f, this.getSupportedFormats(f.name))
-            ));
+            this.processSelectedFiles([blobFile]);
             this.cdr.detectChanges();
-            console.log(`selected files, `, this.selectedFiles);
           },
           error: err => {
             console.error('Error fetching file:', err);
@@ -70,18 +67,22 @@ export class ConvertComponent implements OnInit {
     console.log(`on file selected`)
     const input = event.target as HTMLInputElement;
     if (input.files) {
-      this.selectedFiles.push(...Array.from(input.files).map(f =>
-        new FileItem(f, this.getSupportedFormats(f.name))
-      ));
-      console.log(`selected file`)
-
-      const body = Array.from(input.files).map(f => ({
-        type: "upload",
-        name: f.name,
-        size: f.size
-      }));
-      this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+      this.processSelectedFiles(Array.from(input.files));
     }
+  }
+
+  private processSelectedFiles(files: File[]) {
+    this.selectedFiles.push(...files.map(f =>
+      new FileItem(f, this.getSupportedFormats(f.name))
+    ));
+    console.log(`selected files (device), `, this.selectedFiles);
+
+    const body = Array.from(files).map(f => ({
+      type: "upload",
+      name: f.name,
+      size: f.size
+    }));
+    this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
   }
 
   getSupportedFormats(filename: string) {
@@ -119,7 +120,9 @@ export class ConvertComponent implements OnInit {
         next: (response) => {
           fileItem.status = "Completed";
           console.log(`content disposition:`, response.headers.get('Content-Disposition'));
+          console.log(`response, `, response);
           fileItem.convertedBlob = response.body;
+          this.cdr.detectChanges();
         },
         error: (error) => {
           console.error('Error:', error);
