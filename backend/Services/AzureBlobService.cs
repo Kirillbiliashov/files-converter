@@ -38,5 +38,15 @@ namespace backend.Services
 
         }
 
+        public async Task<byte[]> DownloadFileAsync(string blobUrl)
+        {
+            var blobClient = new BlobClient(new Uri(blobUrl));
+
+            using var memoryStream = new MemoryStream();
+            await blobClient.DownloadToAsync(memoryStream);
+
+            return memoryStream.ToArray();
+        }
+
     }
 }

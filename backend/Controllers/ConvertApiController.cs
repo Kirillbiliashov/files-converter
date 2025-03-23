@@ -26,12 +26,12 @@ namespace backend.Controllers
         private readonly IMongoDatabase _db;
         private readonly AzureBlobService _azureBlobService;
 
-        public string? UserId 
+        public string? UserId
         {
-            get 
+            get
             {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            return identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var identity = HttpContext.User.Identity as ClaimsIdentity;
+                return identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             }
         }
 
@@ -55,8 +55,8 @@ namespace backend.Controllers
 
             try
             {
-                var conversionResult = await ConvertFileAsync(file, outputFormat.ToLower());
-                return File(conversionResult.OutputBytes, conversionResult.MimeType, conversionResult.Filename);
+                var conversionId = await ConvertFileAsync(file, outputFormat.ToLower());
+                return Ok(new { ConversionId = conversionId });
             }
             catch (Exception e)
             {
@@ -73,7 +73,7 @@ namespace backend.Controllers
                 PropertyNameCaseInsensitive = true
             });
 
-            var tasks = new List<Task<ConversionResult>>();
+            var tasks = new List<Task<string>>();
             foreach (var file in files)
             {
                 var fileMetadata = metadata?.FirstOrDefault(m => m.FileName == file.FileName);
@@ -84,34 +84,18 @@ namespace backend.Controllers
                 tasks.Add(ConvertFileAsync(file, fileMetadata.OutputFormat.ToLower()));
             }
 
-            var results = await Task.WhenAll(tasks);
-            using (var memoryStream = new MemoryStream())
+            var conversionIds = await Task.WhenAll(tasks);
+            return Ok(files.Select(f => f.FileName)
+            .Zip(conversionIds)
+            .Select(t => new
             {
-                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-                {
-                    foreach (var result in results)
-                    {
-                        if (result == null)
-                        {
-                            continue;
-                        }
-
-                        var zipEntry = archive.CreateEntry(result.Filename, CompressionLevel.Fastest);
-                        using (var entryStream = zipEntry.Open())
-                        {
-                            await entryStream.WriteAsync(result.OutputBytes, 0, result.OutputBytes.Length);
-                        }
-                    }
-                }
-
-                memoryStream.Seek(0, SeekOrigin.Begin);
-
-                return File(memoryStream.ToArray(), "application/zip", "files.zip");
-            }
-
+                Filename = t.First,
+                ConversionId = t.Second
+            })
+                );
         }
 
-        private async Task<ConversionResult> ConvertFileAsync(IFormFile file, string outputFormat)
+        private async Task<string> ConvertFileAsync(IFormFile file, string outputFormat)
         {
             var sw = Stopwatch.StartNew();
 
@@ -151,7 +135,7 @@ namespace backend.Controllers
                 };
                 await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
 
-                return conversionResult;
+                return conversion.IdInternal;
             }
             catch (Exception e)
             {
@@ -171,6 +155,31 @@ namespace backend.Controllers
                     System.IO.File.Delete(outputFilePath);
                 }
             }
+        }
+
+
+        [Authorize]
+        [HttpPost("download/{conversionId}")]
+        public async Task<IActionResult> DownloadConversion(string conversionId)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var userId = identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var conversion = await _db.GetCollection<Conversion>("conversions")
+            .FindSync(c => c.Id == ObjectId.Parse(conversionId) && c.UserId == ObjectId.Parse(userId))
+            .SingleOrDefaultAsync();
+            if (conversion == null)
+            {
+                return NotFound();
+            }
+
+            var blobBytes = await _azureBlobService.DownloadFileAsync(conversion.OutputUrl);
+
+            return File(blobBytes, "application/octet-stream", Path.GetFileName(conversion.OutputUrl));
         }
 
 

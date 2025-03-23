@@ -27,7 +27,7 @@ namespace backend.Models.Db
 
         [BsonElement("fileSize")]
         [BsonIgnoreIfNull]
-        public int FileSize { get; set; }
+        public long FileSize { get; set; }
 
         [BsonElement("userId")]
         public ObjectId UserId { get; set; } 

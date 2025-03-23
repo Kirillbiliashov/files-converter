@@ -5,9 +5,9 @@ import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { FormatBytesPipe } from '../pipes/format-bytes-pipe';
 import { FileItem } from '../models/file-item';
-import * as JSZip from 'jszip';
 import { GooglePickerService } from '../services/google-picker-service';
 import { FileAdapterService } from '../services/file-adapter-service';
+import { ConversionResult } from '../models/conversion-result';
 
 @Component({
   selector: 'app-convert',
@@ -104,24 +104,19 @@ export class ConvertComponent implements OnInit {
     return parts.length > 1 ? parts.pop()!.toLowerCase() : '';
   }
 
-  private getFileNameWithoutExt(filename: string): string {
-    const parts = filename.split('.');
-    return parts.length > 1 ? parts.shift()!.toLowerCase() : '';
-  }
-
   convertFile(fileItem: FileItem) {
     const formData = new FormData();
     formData.append('file', fileItem.file);
     formData.append('outputFormat', fileItem.selectedFormat.toLowerCase());
     fileItem.status = "Converting";
 
-    this.http.post(`https://localhost:7099/api/convert`, formData, { responseType: 'blob', observe: 'response' })
+    this.http.post<{conversionId: string}>(`https://localhost:7099/api/convert`, formData)
       .subscribe({
         next: (response) => {
           fileItem.status = "Completed";
-          console.log(`content disposition:`, response.headers.get('Content-Disposition'));
-          console.log(`response, `, response);
-          fileItem.convertedBlob = response.body;
+          fileItem.conversionId = response.conversionId;
+          console.log(`conversion id,  `, response.conversionId);
+          // fileItem.convertedBlob = response.body;
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -131,26 +126,51 @@ export class ConvertComponent implements OnInit {
   }
 
   downloadFile(fileItem: FileItem): void {
-    if (!fileItem.convertedBlob) return;
+    if (!fileItem.conversionId) return;
 
-    const format = fileItem.convertedBlob.type == "application/zip" ? "zip" : fileItem.selectedFormat.toLowerCase();
-    console.log(`file format: ${format}, file name: ${fileItem.file.name}`);
-    const fileName = `${fileItem.file.name.split('.').shift()}.${format}`;
-    const link = document.createElement('a');
-    const url = window.URL.createObjectURL(fileItem.convertedBlob);
-    link.href = url;
-    link.download = fileName;
-    link.click();
-    window.URL.revokeObjectURL(url);
+    this.http.post(`https://localhost:7099/api/convert/download/${fileItem.conversionId}`, {}, { responseType: 'blob', observe: 'response'})
+    .subscribe({
+      next: (response) => {
+        const blob: Blob = response.body as Blob;
 
-    const body = [{
-      name: fileItem.file.name,
-      size: fileItem.file.size,
-      type: "download"
-    }
-    ];
-    this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+        const contentDisposition = response.headers.get('Content-Disposition');
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = this.getDownloadFilename(contentDisposition ?? "");
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        const body = [{
+          name: fileItem.file.name,
+          size: fileItem.file.size,
+          type: "download"
+        }
+        ];
+        this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+      },
+      error: () => {}
+    })
   }
+
+
+  private getDownloadFilename(contentDisposition: string): string {
+    // Split the header into parts using ';' as a delimiter.
+    const parts = contentDisposition.split(';').map(part => part.trim());
+    // Look for the part that starts with 'filename=' but not 'filename*='
+    const filenamePart = parts.find(part => part.startsWith('filename=') && !part.startsWith('filename*='));
+    
+    if (filenamePart) {
+      // Remove the "filename=" part and strip any surrounding quotes.
+      return filenamePart.replace(/^filename="?/, '').replace(/"?$/, '');
+    }
+    
+    // Default filename if not found.
+    return 'downloaded_file';
+  }
+  
 
 
   deleteFile(fileItem: FileItem) {
@@ -172,23 +192,14 @@ export class ConvertComponent implements OnInit {
 
     formData.append('metadata', JSON.stringify(metadata));
 
-    this.http.post(`https://localhost:7099/api/convert/all`, formData, { responseType: 'blob', observe: 'response' })
+    this.http.post<ConversionResult[]>(`https://localhost:7099/api/convert/all`, formData)
       .subscribe({
         next: (response) => {
-          if (response.body) {
-            JSZip.loadAsync(response.body).then(zip => {
-              Object.keys(zip.files).forEach(async fileName => {
-                const fileItem = this.selectedFiles.find(f =>
-                  this.getFileNameWithoutExt(f.file.name) == this.getFileNameWithoutExt(fileName));
-                if (fileItem) {
-                  fileItem.convertedBlob = await zip.files[fileName].async('blob');
-                  fileItem.status = "Converted";
-                }
-              });
-            }).catch(error => {
-              console.error('Error reading ZIP:', error);
-            });
-          }
+          console.log(`convert all response, `, response);
+          this.selectedFiles.forEach(f => {
+            f.status = "Completed";
+            f.conversionId = response.find(r => r.filename == f.file.name)?.conversionId ?? null;
+          })
         },
         error: (error) => {
           console.error('Error:', error);
