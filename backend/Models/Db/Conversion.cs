@@ -32,6 +32,9 @@ namespace backend.Models.Db
         [BsonElement("userId")]
         public ObjectId UserId { get; set; } 
 
+        [BsonElement("outputUrl")]
+        public string OutputUrl { get; set; } 
+
         [BsonElement("date")]
         public DateTime Date { get; set; }
     }

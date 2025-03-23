@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using backend.BL.Converter;
 using backend.Models.Db;
+using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -23,6 +24,7 @@ namespace backend.Controllers
 
         private readonly Func<string, IFileConverter> _converterFactory;
         private readonly IMongoDatabase _db;
+        private readonly AzureBlobService _azureBlobService;
 
         public string? UserId 
         {
@@ -33,10 +35,11 @@ namespace backend.Controllers
             }
         }
 
-        public ConvertApiController(Func<string, IFileConverter> converterFactory, IMongoDatabase db)
+        public ConvertApiController(Func<string, IFileConverter> converterFactory, IMongoDatabase db, AzureBlobService azureBlobService)
         {
             _converterFactory = converterFactory;
             _db = db;
+            _azureBlobService = azureBlobService;
         }
 
         [Authorize]
@@ -127,7 +130,12 @@ namespace backend.Controllers
 
                 var converter = _converterFactory(outputFormat);
                 var conversionResult = await converter.ConvertFile(inputFilePath, outputFilePath);
+
+                sw.Stop();
                 var timeElapsed = sw.ElapsedMilliseconds;
+
+                var blobName = $"output/{UserId}/{Guid.NewGuid()}/{conversionResult.Filename}";
+                var outputUrl = await _azureBlobService.UploadFileAsync(blobName, conversionResult.OutputBytes);
 
                 var conversion = new Conversion
                 {
@@ -138,7 +146,8 @@ namespace backend.Controllers
                     Filename = file.FileName,
                     FileSize = conversionResult.OutputBytes.Length,
                     Status = "success",
-                    TimeMsecs = timeElapsed
+                    TimeMsecs = timeElapsed,
+                    OutputUrl = outputUrl
                 };
                 await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
 

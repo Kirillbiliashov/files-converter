@@ -229,3 +229,6 @@ _Pvt_Extensions
 
 # FAKE - F# Make
 .fake/
+
+frontend/localhost-key.pem
+frontend/localhost.pem
