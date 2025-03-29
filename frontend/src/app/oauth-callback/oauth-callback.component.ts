@@ -18,21 +18,18 @@ export class OauthCallbackComponent implements OnInit {
     private router: Router
   ) { }
 
-  
+
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const authCode = params['code'];
       const provider = params['state'];
-      console.log(`auth code: ${authCode}`);
 
-      setTimeout(() => {
-        this.authService.processOauthLogin(authCode, provider).subscribe({
-          next: () => this.router.navigate(['/convert']),
-          error: err => {
-            this.errorMessage = err.error;
-          }
-        })
-      }, 10000);
+      this.authService.processOauthLogin(authCode, provider).subscribe({
+        next: () => this.router.navigate(['/convert']),
+        error: err => {
+          this.errorMessage = err.error;
+        }
+      })
     });
   }
 }

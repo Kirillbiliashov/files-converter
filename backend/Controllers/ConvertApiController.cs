@@ -55,8 +55,8 @@ namespace backend.Controllers
 
             try
             {
-                var conversionId = await ConvertFileAsync(file, outputFormat.ToLower());
-                return Ok(new { ConversionId = conversionId });
+                var conversion = await ConvertFileAsync(file, outputFormat.ToLower());
+                return Ok(new { Conversion = conversion });
             }
             catch (Exception e)
             {
@@ -72,30 +72,28 @@ namespace backend.Controllers
             {
                 PropertyNameCaseInsensitive = true
             });
-
-            var tasks = new List<Task<string>>();
-            foreach (var file in files)
+            if (metadata == null)
             {
-                var fileMetadata = metadata?.FirstOrDefault(m => m.FileName == file.FileName);
-                if (fileMetadata == null)
-                {
-                    continue;
-                }
-                tasks.Add(ConvertFileAsync(file, fileMetadata.OutputFormat.ToLower()));
+                return BadRequest();
             }
 
-            var conversionIds = await Task.WhenAll(tasks);
-            return Ok(files.Select(f => f.FileName)
-            .Zip(conversionIds)
-            .Select(t => new
+            var filesWithMetadata = files.Zip(metadata);
+            var tasks = new Dictionary<string, Task<Conversion>>();
+            foreach (var f in filesWithMetadata)
             {
-                Filename = t.First,
-                ConversionId = t.Second
-            })
-                );
+                tasks[f.Second.Id] = ConvertFileAsync(f.First, f.Second.OutputFormat.ToLower());
+            }
+
+            await Task.WhenAll(tasks.Values);
+
+            return Ok(tasks.Select(p => new 
+            {
+                Id = p.Key,
+                Conversion = p.Value.Result
+            }));
         }
 
-        private async Task<string> ConvertFileAsync(IFormFile file, string outputFormat)
+        private async Task<Conversion> ConvertFileAsync(IFormFile file, string outputFormat)
         {
             var sw = Stopwatch.StartNew();
 
@@ -111,7 +109,7 @@ namespace backend.Controllers
                 {
                     await file.CopyToAsync(stream);
                 }
-
+  
                 var converter = _converterFactory(outputFormat);
                 var conversionResult = await converter.ConvertFile(inputFilePath, outputFilePath);
 
@@ -135,12 +133,23 @@ namespace backend.Controllers
                 };
                 await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
 
-                return conversion.IdInternal;
+                return conversion;
             }
             catch (Exception e)
             {
+                var conversion = new Conversion
+                {
+                    UserId = ObjectId.Parse(UserId),
+                    Date = DateTime.UtcNow,
+                    InputFormat = Path.GetExtension(file.FileName).ToLower().Substring(1),
+                    OutputFormat = outputFormat.ToLower(),
+                    Filename = file.FileName,
+                    Status = "failed",
+                };
+                await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
+
                 Console.WriteLine($"Error: {e.Message}");
-                throw;
+                return conversion;
                 // return StatusCode(500, $"Conversion failed. Error: {e.Message}");
             }
             finally
@@ -189,6 +198,7 @@ namespace backend.Controllers
     {
         public string FileName { get; set; }
         public string OutputFormat { get; set; }
+        public string Id { get; set; }
     }
 
 }

@@ -36,7 +36,6 @@ namespace backend.Controllers
             }
 
             var collection = _db.GetCollection<FileInteraction>("fileInteractions");
-
             await collection.InsertManyAsync(body.Select(s => new FileInteraction
             {
                 UserId = ObjectId.Parse(userId),

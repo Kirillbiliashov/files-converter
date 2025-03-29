@@ -15,8 +15,9 @@ class LastActivity {
     constructor(public total: number, public difference: number | null) {}
 }
 
-class Conversion {
+export class Conversion {
     constructor(
+        public idInternal: string,
         public filename: string,
         public fileSize: number,
         public inputFormat: string,

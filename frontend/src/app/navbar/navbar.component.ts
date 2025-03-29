@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth-service';
 import { CurrentUser } from '../models/current-user';
@@ -13,15 +13,11 @@ import { CurrentUser } from '../models/current-user';
 })
 export class NavbarComponent {
 
-  currentRoute: string = '';
-  currentUser: CurrentUser | null = null;
+  @Input() currentRoute!: string;
+  @Input() currentUser!: CurrentUser | null;
+  
 
-  constructor(private router: Router, private authService: AuthService) {
-    this.router.events.subscribe(() => {
-      this.currentRoute = this.router.url;
-      console.log(`current route: ${this.currentRoute}`);
-      this.currentUser = authService.getCurrentUser();
-    });
+  constructor(private authService: AuthService) {
   }
 
   logout() {

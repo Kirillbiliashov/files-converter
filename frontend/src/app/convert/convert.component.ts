@@ -8,6 +8,7 @@ import { FileItem } from '../models/file-item';
 import { GooglePickerService } from '../services/google-picker-service';
 import { FileAdapterService } from '../services/file-adapter-service';
 import { ConversionResult } from '../models/conversion-result';
+import { Conversion } from '../models/dashboard-data';
 
 @Component({
   selector: 'app-convert',
@@ -64,7 +65,6 @@ export class ConvertComponent implements OnInit {
   }
 
   onFileSelected(event: Event) {
-    console.log(`on file selected`)
     const input = event.target as HTMLInputElement;
     if (input.files) {
       this.processSelectedFiles(Array.from(input.files));
@@ -110,12 +110,12 @@ export class ConvertComponent implements OnInit {
     formData.append('outputFormat', fileItem.selectedFormat.toLowerCase());
     fileItem.status = "Converting";
 
-    this.http.post<{conversionId: string}>(`https://localhost:7099/api/convert`, formData)
+    this.http.post<{conversion: Conversion}>(`https://localhost:7099/api/convert`, formData)
       .subscribe({
         next: (response) => {
-          fileItem.status = "Completed";
-          fileItem.conversionId = response.conversionId;
-          console.log(`conversion id,  `, response.conversionId);
+          fileItem.status = response.conversion.status  == "success" ?  "Completed" : "Failed";
+          fileItem.conversion = response.conversion;
+          console.log(`conversion id,  `, response.conversion.idInternal);
           // fileItem.convertedBlob = response.body;
           this.cdr.detectChanges();
         },
@@ -126,9 +126,9 @@ export class ConvertComponent implements OnInit {
   }
 
   downloadFile(fileItem: FileItem): void {
-    if (!fileItem.conversionId) return;
+    if (!fileItem.conversion?.idInternal) return;
 
-    this.http.post(`https://localhost:7099/api/convert/download/${fileItem.conversionId}`, {}, { responseType: 'blob', observe: 'response'})
+    this.http.post(`https://localhost:7099/api/convert/download/${fileItem.conversion.idInternal}`, {}, { responseType: 'blob', observe: 'response'})
     .subscribe({
       next: (response) => {
         const blob: Blob = response.body as Blob;
@@ -182,7 +182,8 @@ export class ConvertComponent implements OnInit {
 
     const metadata = this.selectedFiles.map((fileItem, index) => ({
       fileName: fileItem.file.name,
-      outputFormat: fileItem.selectedFormat
+      outputFormat: fileItem.selectedFormat,
+      id: fileItem.id
     }));
 
     this.selectedFiles.forEach(fileItem => {
@@ -192,13 +193,18 @@ export class ConvertComponent implements OnInit {
 
     formData.append('metadata', JSON.stringify(metadata));
 
-    this.http.post<ConversionResult[]>(`https://localhost:7099/api/convert/all`, formData)
+    this.http.post<{id: string, conversion: Conversion}[]>(`https://localhost:7099/api/convert/all`, formData)
       .subscribe({
         next: (response) => {
           console.log(`convert all response, `, response);
+          response.forEach(r => {
+            const file = this.selectedFiles.find(f => f.id == r.id);
+            if (file) {
+              file.conversion = r.conversion;
+            }
+          })
           this.selectedFiles.forEach(f => {
             f.status = "Completed";
-            f.conversionId = response.find(r => r.filename == f.file.name)?.conversionId ?? null;
           })
         },
         error: (error) => {

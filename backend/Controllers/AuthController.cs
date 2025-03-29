@@ -26,9 +26,12 @@ namespace backend.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly int _tokenExpiryMins;
         private readonly IMongoDatabase _db;
 
         private readonly Func<string, OAuthSignInManager> _signInManagerFactory;
+
+        public DateTime JwtTokenExpirationTime => DateTime.UtcNow.AddMinutes(_tokenExpiryMins);
 
         public AuthController(
             IConfiguration configuration,
@@ -36,6 +39,7 @@ namespace backend.Controllers
             Func<string, OAuthSignInManager> signInManagerFactory)
         {
             _configuration = configuration;
+            _tokenExpiryMins = int.Parse(_configuration["JwtSettings:ExpiryInMinutes"]);
             _db = db;
             _signInManagerFactory = signInManagerFactory;
         }
@@ -87,7 +91,7 @@ namespace backend.Controllers
 
             var token = GenerateJwtToken(user.IdInternal);
             user.PasswordHash = null;
-            return Ok(new { token, user });
+            return Ok(new { token, user, tokenExpirationDate = JwtTokenExpirationTime });
         }
 
         [HttpGet("login/oauth")]
@@ -128,7 +132,7 @@ namespace backend.Controllers
 
             var token = GenerateJwtToken(user.IdInternal);
 
-            return Ok(new { token, user });
+            return Ok(new { token, user, tokenExpirationDate = JwtTokenExpirationTime });
         }
 
         private async Task UpsertAccessToken(AccessTokenResponse response, string userId, string provider)
