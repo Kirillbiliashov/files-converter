@@ -5,12 +5,15 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using backend.BL.Converter;
+using backend.BL.Encryption;
 using backend.Models.Db;
 using backend.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -25,6 +28,9 @@ namespace backend.Controllers
         private readonly Func<string, IFileConverter> _converterFactory;
         private readonly IMongoDatabase _db;
         private readonly AzureBlobService _azureBlobService;
+        private readonly IEncryptor _encryptor;
+
+        private static readonly byte[] encKey = Convert.FromBase64String("MoAgEQEFmbkA4uXrRXxjFiCv30DMqXWrAmRAcZ1LlNM=");
 
         public string? UserId
         {
@@ -35,11 +41,16 @@ namespace backend.Controllers
             }
         }
 
-        public ConvertApiController(Func<string, IFileConverter> converterFactory, IMongoDatabase db, AzureBlobService azureBlobService)
+        public ConvertApiController(
+            Func<string, IFileConverter> converterFactory, 
+            IMongoDatabase db, 
+            AzureBlobService azureBlobService,
+            IEncryptor encryptor)
         {
             _converterFactory = converterFactory;
             _db = db;
             _azureBlobService = azureBlobService;
+            _encryptor = encryptor;
         }
 
         [HttpPost("")]
@@ -78,7 +89,7 @@ namespace backend.Controllers
 
             await Task.WhenAll(tasks.Values);
 
-            return Ok(tasks.Select(p => new 
+            return Ok(tasks.Select(p => new
             {
                 Id = p.Key,
                 Conversion = p.Value.Result
@@ -101,7 +112,7 @@ namespace backend.Controllers
                 {
                     await file.CopyToAsync(stream);
                 }
-  
+
                 var converter = _converterFactory(outputFormat);
                 var conversionResult = await converter.ConvertFile(inputFilePath, outputFilePath);
 
@@ -110,8 +121,8 @@ namespace backend.Controllers
 
                 var primaryFolder = UserId ?? "anon";
                 var blobName = $"output/{primaryFolder}/{Guid.NewGuid()}/{conversionResult.Filename}";
-                var outputUrl = await _azureBlobService.UploadFileAsync(blobName, conversionResult.OutputBytes);
-                Console.WriteLine($"Converted and written to {blobName}");
+                var encryptedBytes = _encryptor.EncryptData(conversionResult.OutputBytes, encKey);
+                var outputUrl = await _azureBlobService.UploadFileAsync(blobName, encryptedBytes);
                 var conversion = new Conversion
                 {
                     UserId = UserId != null ? ObjectId.Parse(UserId) : null,
@@ -171,8 +182,9 @@ namespace backend.Controllers
             }
 
             var blobBytes = await _azureBlobService.DownloadFileAsync(conversion.OutputUrl);
+            var decryptedBytes = _encryptor.DecryptData(blobBytes, encKey);
 
-            return File(blobBytes, "application/octet-stream", Path.GetFileName(conversion.OutputUrl));
+            return File(decryptedBytes, "application/octet-stream", Path.GetFileName(conversion.OutputUrl));
         }
 
 

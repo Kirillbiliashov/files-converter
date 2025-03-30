@@ -1,5 +1,6 @@
 using System.Text;
 using backend.BL.Converter;
+using backend.BL.Encryption;
 using backend.BL.Integrations;
 using backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,6 +21,7 @@ builder.Services.AddSingleton<GoogleSignInManager>();
 builder.Services.AddSingleton<DropboxSignInManager>();
 
 builder.Services.AddSingleton<AzureBlobService>();
+builder.Services.AddSingleton<IEncryptor, GcmEncryptor>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];
