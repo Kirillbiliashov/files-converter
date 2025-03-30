@@ -18,6 +18,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MongoDB.Bson;
+using backend.BL.Encryption;
 
 namespace backend.Controllers
 {
@@ -28,6 +29,8 @@ namespace backend.Controllers
         private readonly IConfiguration _configuration;
         private readonly int _tokenExpiryMins;
         private readonly IMongoDatabase _db;
+        private readonly IEncryptionKeyStorage _encryptionKeyStorage;
+        private readonly IEncryptor _encryptor;
 
         private readonly Func<string, OAuthSignInManager> _signInManagerFactory;
 
@@ -36,12 +39,16 @@ namespace backend.Controllers
         public AuthController(
             IConfiguration configuration,
             IMongoDatabase db,
-            Func<string, OAuthSignInManager> signInManagerFactory)
+            Func<string, OAuthSignInManager> signInManagerFactory,
+            IEncryptionKeyStorage encryptionKeyStorage,
+            IEncryptor encryptor)
         {
             _configuration = configuration;
             _tokenExpiryMins = int.Parse(_configuration["JwtSettings:ExpiryInMinutes"]);
             _db = db;
             _signInManagerFactory = signInManagerFactory;
+            _encryptionKeyStorage = encryptionKeyStorage;
+            _encryptor = encryptor;
         }
 
 
@@ -140,9 +147,15 @@ namespace backend.Controllers
             var parsedUserId = ObjectId.Parse(userId);
             var filter = Builders<AccessToken>.Filter.Eq(t => t.UserId, parsedUserId);
 
+            var encryptionKey = await _encryptionKeyStorage.GetKey(userId);
+            var accessTokenBytes = Encoding.UTF8.GetBytes(response.AccessToken);
+            var encryptedAccessToken = _encryptor.EncryptData(Encoding.UTF8.GetBytes(response.AccessToken), encryptionKey);
+            var refreshTokenBytes = Encoding.UTF8.GetBytes(response.RefreshToken);
+            var encryptedRefreshToken = _encryptor.EncryptData(Encoding.UTF8.GetBytes(response.AccessToken), encryptionKey);
+
             var update = Builders<AccessToken>.Update
-                .Set(t => t.Token, response.AccessToken)
-                .Set(t => t.RefreshToken, response.RefreshToken)
+                .Set(t => t.Token, Convert.ToBase64String(encryptedAccessToken))
+                .Set(t => t.RefreshToken, Convert.ToBase64String(encryptedRefreshToken))
                 .Set(t => t.TokenExpiration, DateTime.UtcNow.AddSeconds(response.ExpiresIn))
                 .Set(t => t.ConnectedAt, DateTime.UtcNow)
                 .Set(t => t.Provider, provider)
