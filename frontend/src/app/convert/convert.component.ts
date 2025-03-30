@@ -9,6 +9,7 @@ import { GooglePickerService } from '../services/google-picker-service';
 import { FileAdapterService } from '../services/file-adapter-service';
 import { ConversionResult } from '../models/conversion-result';
 import { Conversion } from '../models/dashboard-data';
+import { AuthService } from '../services/auth-service';
 
 @Component({
   selector: 'app-convert',
@@ -22,16 +23,16 @@ export class ConvertComponent implements OnInit {
   fileBlob: Blob | null = null;
   private allConvertFormats = ["PDF", "DOCX", "CSV", "XLSX", "TXT", "RTF", "HTML", "EPUB", "PNG", "JPG"];
   selectedFileName: string | undefined;
-  private accessToken!: string;
+  accessToken: string | null = null;
 
   constructor(
     private http: HttpClient,
     private googlePickerService: GooglePickerService,
     private fileAdapterService: FileAdapterService,
-    private cdr: ChangeDetectorRef) { }
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService) { }
 
   async ngOnInit() {
-
     this.http.get<{ accessToken: string }>(`https://localhost:7099/api/access-token?provider=Google`)
       .subscribe({
         next: async (response) => {
@@ -39,14 +40,15 @@ export class ConvertComponent implements OnInit {
           await this.googlePickerService.loadPicker();
         },
         error: (error) => {
-          console.error('Error:', error);
+          console.log(`error, ${error}`)
+          this.accessToken = null;
         }
       });
 
     this.googlePickerService.fileSelected$.subscribe((googleFile) => {
       console.log('File selected in component:', googleFile);
 
-      this.fileAdapterService.adaptFile(googleFile, this.accessToken)
+      this.fileAdapterService.adaptFile(googleFile, this.accessToken!)
         .subscribe({
           next: blobFile => {
             this.processSelectedFiles([blobFile]);
@@ -61,7 +63,11 @@ export class ConvertComponent implements OnInit {
   }
 
   selectGoogleFile() {
-    this.googlePickerService.createPicker(this.accessToken);
+    this.googlePickerService.createPicker(this.accessToken!);
+  }
+
+  loginWithGoogle() {
+    window.location.href = 'https://localhost:7099/api/auth/login/oauth?provider=Google';
   }
 
   onFileSelected(event: Event) {
@@ -77,12 +83,15 @@ export class ConvertComponent implements OnInit {
     ));
     console.log(`selected files (device), `, this.selectedFiles);
 
-    const body = Array.from(files).map(f => ({
-      type: "upload",
-      name: f.name,
-      size: f.size
-    }));
-    this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+
+    if (this.authService.getCurrentUser()) {
+      const body = Array.from(files).map(f => ({
+        type: "upload",
+        name: f.name,
+        size: f.size
+      }));
+      this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+    }
   }
 
   getSupportedFormats(filename: string) {
@@ -110,12 +119,12 @@ export class ConvertComponent implements OnInit {
     formData.append('outputFormat', fileItem.selectedFormat.toLowerCase());
     fileItem.status = "Converting";
 
-    this.http.post<{conversion: Conversion}>(`https://localhost:7099/api/convert`, formData)
+    this.http.post<{ conversion: Conversion }>(`https://localhost:7099/api/convert`, formData)
       .subscribe({
         next: (response) => {
-          fileItem.status = response.conversion.status  == "success" ?  "Completed" : "Failed";
+          fileItem.status = response.conversion.status == "success" ? "Completed" : "Failed";
           fileItem.conversion = response.conversion;
-          console.log(`conversion id,  `, response.conversion.idInternal);
+          console.log(`conversion,  `, response.conversion);
           // fileItem.convertedBlob = response.body;
           this.cdr.detectChanges();
         },
@@ -128,31 +137,34 @@ export class ConvertComponent implements OnInit {
   downloadFile(fileItem: FileItem): void {
     if (!fileItem.conversion?.idInternal) return;
 
-    this.http.post(`https://localhost:7099/api/convert/download/${fileItem.conversion.idInternal}`, {}, { responseType: 'blob', observe: 'response'})
-    .subscribe({
-      next: (response) => {
-        const blob: Blob = response.body as Blob;
+    this.http.post(`https://localhost:7099/api/convert/download/${fileItem.conversion.idInternal}`, {}, { responseType: 'blob', observe: 'response' })
+      .subscribe({
+        next: (response) => {
+          const blob: Blob = response.body as Blob;
 
-        const contentDisposition = response.headers.get('Content-Disposition');
+          const contentDisposition = response.headers.get('Content-Disposition');
 
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = this.getDownloadFilename(contentDisposition ?? "");
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = this.getDownloadFilename(contentDisposition ?? "");
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
 
-        const body = [{
-          name: fileItem.file.name,
-          size: fileItem.file.size,
-          type: "download"
-        }
-        ];
-        this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
-      },
-      error: () => {}
-    })
+          if (this.authService.getCurrentUser()) {
+            const body = [{
+              name: fileItem.file.name,
+              size: fileItem.file.size,
+              type: "download"
+            }
+            ];
+            this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+          }
+
+        },
+        error: () => { }
+      })
   }
 
 
@@ -161,16 +173,16 @@ export class ConvertComponent implements OnInit {
     const parts = contentDisposition.split(';').map(part => part.trim());
     // Look for the part that starts with 'filename=' but not 'filename*='
     const filenamePart = parts.find(part => part.startsWith('filename=') && !part.startsWith('filename*='));
-    
+
     if (filenamePart) {
       // Remove the "filename=" part and strip any surrounding quotes.
       return filenamePart.replace(/^filename="?/, '').replace(/"?$/, '');
     }
-    
+
     // Default filename if not found.
     return 'downloaded_file';
   }
-  
+
 
 
   deleteFile(fileItem: FileItem) {
@@ -193,7 +205,7 @@ export class ConvertComponent implements OnInit {
 
     formData.append('metadata', JSON.stringify(metadata));
 
-    this.http.post<{id: string, conversion: Conversion}[]>(`https://localhost:7099/api/convert/all`, formData)
+    this.http.post<{ id: string, conversion: Conversion }[]>(`https://localhost:7099/api/convert/all`, formData)
       .subscribe({
         next: (response) => {
           console.log(`convert all response, `, response);

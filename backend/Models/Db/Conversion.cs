@@ -30,7 +30,8 @@ namespace backend.Models.Db
         public long FileSize { get; set; }
 
         [BsonElement("userId")]
-        public ObjectId UserId { get; set; } 
+        [BsonIgnoreIfNull]
+        public ObjectId? UserId { get; set; } 
 
         [BsonElement("outputUrl")]
         public string OutputUrl { get; set; } 

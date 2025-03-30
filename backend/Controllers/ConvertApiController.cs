@@ -42,17 +42,9 @@ namespace backend.Controllers
             _azureBlobService = azureBlobService;
         }
 
-        [Authorize]
         [HttpPost("")]
         public async Task<IActionResult> ConvertFile(IFormFile file, [FromForm] string outputFormat)
         {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            var userId = identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return Unauthorized();
-            }
-
             try
             {
                 var conversion = await ConvertFileAsync(file, outputFormat.ToLower());
@@ -116,12 +108,13 @@ namespace backend.Controllers
                 sw.Stop();
                 var timeElapsed = sw.ElapsedMilliseconds;
 
-                var blobName = $"output/{UserId}/{Guid.NewGuid()}/{conversionResult.Filename}";
+                var primaryFolder = UserId ?? "anon";
+                var blobName = $"output/{primaryFolder}/{Guid.NewGuid()}/{conversionResult.Filename}";
                 var outputUrl = await _azureBlobService.UploadFileAsync(blobName, conversionResult.OutputBytes);
-
+                Console.WriteLine($"Converted and written to {blobName}");
                 var conversion = new Conversion
                 {
-                    UserId = ObjectId.Parse(UserId),
+                    UserId = UserId != null ? ObjectId.Parse(UserId) : null,
                     Date = DateTime.UtcNow,
                     InputFormat = Path.GetExtension(file.FileName).ToLower().Substring(1),
                     OutputFormat = outputFormat.ToLower(),
@@ -166,20 +159,11 @@ namespace backend.Controllers
             }
         }
 
-
-        [Authorize]
         [HttpPost("download/{conversionId}")]
         public async Task<IActionResult> DownloadConversion(string conversionId)
         {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            var userId = identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return Unauthorized();
-            }
-
             var conversion = await _db.GetCollection<Conversion>("conversions")
-            .FindSync(c => c.Id == ObjectId.Parse(conversionId) && c.UserId == ObjectId.Parse(userId))
+            .FindSync(c => c.Id == ObjectId.Parse(conversionId))
             .SingleOrDefaultAsync();
             if (conversion == null)
             {

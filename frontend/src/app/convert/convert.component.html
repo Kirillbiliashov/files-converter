@@ -20,7 +20,10 @@
                     </button>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" (click)="fileInput.click()" >From My Device</a></li>
-                        <li><a class="dropdown-item cursor-pointer" (click)="this.selectGoogleFile()" >From Google Drive</a></li>
+                        <li>
+                            <a class="dropdown-item cursor-pointer" (click)="this.selectGoogleFile()" *ngIf="this.accessToken" >From Google Drive</a>
+                            <a class="dropdown-item cursor-pointer" (click)="this.loginWithGoogle()" *ngIf="!this.accessToken">Connect Google Drive</a>
+                        </li>
                       </ul>
                 </div>
             </div>

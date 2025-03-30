@@ -7,7 +7,7 @@
     <div class="d-flex align-items-center gap-4">
         <ul class="navbar-nav mb-2 mb-lg-0">
             <li class="nav-item ">
-              <a *ngIf="this.currentRoute == '/convert'" class="nav-link active text-light" aria-current="page" href="/dashboard">Dashboard</a>
+              <a *ngIf="this.currentRoute == '/convert' && this.currentUser" class="nav-link active text-light" aria-current="page" href="/dashboard">Dashboard</a>
               <a *ngIf="this.currentRoute == '/dashboard'" class="nav-link active text-light" aria-current="page" href="/convert">Convert</a>
             </li>
           </ul>

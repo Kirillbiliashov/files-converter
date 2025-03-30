@@ -6,7 +6,7 @@ import { OauthCallbackComponent } from './oauth-callback/oauth-callback.componen
 import { DashboardComponent } from './dashboard/dashboard.component';
 
 export const routes: Routes = [
-    { path: 'convert', component: ConvertComponent, canActivate: [AuthGuard] },
+    { path: 'convert', component: ConvertComponent },
     { path: 'login', component: LoginComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard]  },
     { path: 'oauth/callback', component: OauthCallbackComponent },
