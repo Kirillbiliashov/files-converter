@@ -171,11 +171,16 @@ namespace backend.Controllers
 
         private async Task<string> GetConvertedFileOutputUrl(string filename, byte[] outputBytes)
         {
+            byte[] blobBytes = outputBytes;
+            if (UserId != null)
+            {
+                var encryptionKey = await _encryptionKeyStorage.GetKey(UserId);
+                blobBytes = _encryptor.EncryptData(outputBytes, encryptionKey);
+            }
+
             var primaryFolder = UserId ?? "anon";
             var blobName = $"output/{primaryFolder}/{Guid.NewGuid()}/{filename}";
-            var encryptionKey = await _encryptionKeyStorage.GetKey(UserId);
-            var encryptedBytes = _encryptor.EncryptData(outputBytes, encryptionKey);
-            return await _azureBlobService.UploadFileAsync(blobName, encryptedBytes);
+            return await _azureBlobService.UploadFileAsync(blobName, blobBytes);
         }
 
         [HttpPost("download/{conversionId}")]
@@ -190,12 +195,14 @@ namespace backend.Controllers
             }
 
             var blobBytes = await _azureBlobService.DownloadFileAsync(conversion.OutputUrl);
-            var encryptionKey = await _encryptionKeyStorage.GetKey(UserId);
-            var decryptedBytes = _encryptor.DecryptData(blobBytes, encryptionKey);
+            if (UserId != null)
+            {
+                var encryptionKey = await _encryptionKeyStorage.GetKey(UserId);
+                blobBytes = _encryptor.DecryptData(blobBytes, encryptionKey);
+            }
 
-            return File(decryptedBytes, "application/octet-stream", Path.GetFileName(conversion.OutputUrl));
+            return File(blobBytes, "application/octet-stream", Path.GetFileName(conversion.OutputUrl));
         }
-
 
     }
 
