@@ -22,6 +22,7 @@ builder.Services.AddSingleton<DropboxSignInManager>();
 
 builder.Services.AddSingleton<AzureBlobService>();
 builder.Services.AddSingleton<IEncryptor, GcmEncryptor>();
+builder.Services.AddSingleton<IEncryptionKeyStorage, EncryptionKeyAzureStorage>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];

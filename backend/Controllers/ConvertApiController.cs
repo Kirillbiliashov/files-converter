@@ -29,8 +29,7 @@ namespace backend.Controllers
         private readonly IMongoDatabase _db;
         private readonly AzureBlobService _azureBlobService;
         private readonly IEncryptor _encryptor;
-
-        private static readonly byte[] encKey = Convert.FromBase64String("MoAgEQEFmbkA4uXrRXxjFiCv30DMqXWrAmRAcZ1LlNM=");
+        private readonly IEncryptionKeyStorage _encryptionKeyStorage;
 
         public string? UserId
         {
@@ -42,15 +41,17 @@ namespace backend.Controllers
         }
 
         public ConvertApiController(
-            Func<string, IFileConverter> converterFactory, 
-            IMongoDatabase db, 
+            Func<string, IFileConverter> converterFactory,
+            IMongoDatabase db,
             AzureBlobService azureBlobService,
-            IEncryptor encryptor)
+            IEncryptor encryptor,
+            IEncryptionKeyStorage encryptionKeyStorage)
         {
             _converterFactory = converterFactory;
             _db = db;
             _azureBlobService = azureBlobService;
             _encryptor = encryptor;
+            _encryptionKeyStorage = encryptionKeyStorage;
         }
 
         [HttpPost("")]
@@ -119,10 +120,7 @@ namespace backend.Controllers
                 sw.Stop();
                 var timeElapsed = sw.ElapsedMilliseconds;
 
-                var primaryFolder = UserId ?? "anon";
-                var blobName = $"output/{primaryFolder}/{Guid.NewGuid()}/{conversionResult.Filename}";
-                var encryptedBytes = _encryptor.EncryptData(conversionResult.OutputBytes, encKey);
-                var outputUrl = await _azureBlobService.UploadFileAsync(blobName, encryptedBytes);
+                var outputUrl = await GetConvertedFileOutputUrl(conversionResult.Filename, conversionResult.OutputBytes);
                 var conversion = new Conversion
                 {
                     UserId = UserId != null ? ObjectId.Parse(UserId) : null,
@@ -170,6 +168,16 @@ namespace backend.Controllers
             }
         }
 
+
+        private async Task<string> GetConvertedFileOutputUrl(string filename, byte[] outputBytes)
+        {
+            var primaryFolder = UserId ?? "anon";
+            var blobName = $"output/{primaryFolder}/{Guid.NewGuid()}/{filename}";
+            var encryptionKey = await _encryptionKeyStorage.GetKey(UserId);
+            var encryptedBytes = _encryptor.EncryptData(outputBytes, encryptionKey);
+            return await _azureBlobService.UploadFileAsync(blobName, encryptedBytes);
+        }
+
         [HttpPost("download/{conversionId}")]
         public async Task<IActionResult> DownloadConversion(string conversionId)
         {
@@ -182,7 +190,8 @@ namespace backend.Controllers
             }
 
             var blobBytes = await _azureBlobService.DownloadFileAsync(conversion.OutputUrl);
-            var decryptedBytes = _encryptor.DecryptData(blobBytes, encKey);
+            var encryptionKey = await _encryptionKeyStorage.GetKey(UserId);
+            var decryptedBytes = _encryptor.DecryptData(blobBytes, encryptionKey);
 
             return File(decryptedBytes, "application/octet-stream", Path.GetFileName(conversion.OutputUrl));
         }
