@@ -22,6 +22,8 @@ export class DashboardComponent implements OnInit {
   mostActiveDay!: string;
   mostActiveTime!: string;
   chart!: Chart;
+  rowsPerPage = 10;
+  page: number = 0;
 
   constructor(private http: HttpClient) {
 
@@ -29,7 +31,7 @@ export class DashboardComponent implements OnInit {
 
 
   ngOnInit(): void {
-    this.http.get<DashboardData>(`https://localhost:7099/api/dashboard`)
+    this.http.get<DashboardData>(`https://localhost:7099/api/dashboard/stats`)
       .subscribe({
         next: (response) => {
           console.log(`response:, `, response);
@@ -120,5 +122,51 @@ export class DashboardComponent implements OnInit {
       console.error("Canvas element not found!");
     }
   }
+
+    downloadFile(conversionId: string): void {
+  
+      this.http.post(`https://localhost:7099/api/convert/download/${conversionId}`, {}, { responseType: 'blob', observe: 'response' })
+        .subscribe({
+          next: (response) => {
+            const blob: Blob = response.body as Blob;
+  
+            const contentDisposition = response.headers.get('Content-Disposition');
+  
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = this.getDownloadFilename(contentDisposition ?? "");
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          },
+          error: () => { }
+        })
+    }
+
+    private getDownloadFilename(contentDisposition: string): string {
+      // Split the header into parts using ';' as a delimiter.
+      const parts = contentDisposition.split(';').map(part => part.trim());
+      // Look for the part that starts with 'filename=' but not 'filename*='
+      const filenamePart = parts.find(part => part.startsWith('filename=') && !part.startsWith('filename*='));
+  
+      if (filenamePart) {
+        // Remove the "filename=" part and strip any surrounding quotes.
+        return filenamePart.replace(/^filename="?/, '').replace(/"?$/, '');
+      }
+  
+      // Default filename if not found.
+      return 'downloaded_file';
+    }
+
+    goToNextPage() {
+      console.log(`going to next page`)
+      this.page++;
+    }
+
+    goToPrevPage() {
+      console.log(`going to prev page`)
+      this.page--;
+    }
 
 }

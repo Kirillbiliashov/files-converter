@@ -25,7 +25,7 @@ namespace backend.Controllers
 
 
         [Authorize]
-        [HttpGet("")]
+        [HttpGet("stats")]
         public async Task<IActionResult> GetDashboardData()
         {
             var identity = HttpContext.User.Identity as ClaimsIdentity;
@@ -52,26 +52,26 @@ namespace backend.Controllers
 
             var successfulConversions = userConversions.Where(c => c.Status == "success");
 
-            return Ok(new 
+            return Ok(new
             {
-                downloaded = new 
+                downloaded = new
                 {
                     total = downloads.Count(),
                     difference = GetMonthIncrease(downloads.Select(d => d.Date))
                 },
-                uploaded = new 
+                uploaded = new
                 {
                     total = uploads.Count(),
                     difference = GetMonthIncrease(uploads.Select(d => d.Date))
                 },
-                conversions = new 
+                conversions = new
                 {
                     total = userConversions.Count(),
                     difference = GetMonthIncrease(userConversions.Select(d => d.Date))
                 },
-                successRate = new 
+                successRate = new
                 {
-                    total = (double) successfulConversions.Count() / userConversions.Count * 100,
+                    total = (double)successfulConversions.Count() / userConversions.Count * 100,
                     difference = GetMonthIncrease(successfulConversions.Select(d => d.Date))
                 },
                 analytics = conversionAnalytics,
@@ -87,11 +87,12 @@ namespace backend.Controllers
             var datesThisMonth = dates.Where(d => d.Year == currentMonth.Year && d.Month == currentMonth.Month).Count();
             var datesLastMonth = dates.Where(d => d.Year == previousMonth.Year && d.Month == previousMonth.Month).Count();
 
-            if (datesLastMonth == 0) 
+            if (datesLastMonth == 0)
             {
                 return null;
             }
             return ((datesThisMonth / datesLastMonth) - 1) * 100;
         }
+
     }
 }

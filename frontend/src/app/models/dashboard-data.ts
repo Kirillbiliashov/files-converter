@@ -22,6 +22,7 @@ export class Conversion {
         public fileSize: number,
         public inputFormat: string,
         public outputFormat: string,
+        public outputUrl: string,
         public status: string,
         public date: Date
     ) {}

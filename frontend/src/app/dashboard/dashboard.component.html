@@ -1,31 +1,30 @@
 <style>
-  .nav-tabs .nav-link {
-    border-radius: 8px 8px 0 0;
-    /* Rounded top corners */
-  }
-
-  .nav-tabs .nav-link.active {
-    background-color: #f5f7fb !important;
-    color: #0d6efd !important;
-    /* border-color: #f5f7fb !important;
-    border-bottom: #0d6efd !important; */
-  }
-
-  .nav-tabs .nav-link:not(.active) {
-    color: gray !important;
-  }
 
   .btn-light {
     background-color: white;
     border: 1px solid rgb(222, 219, 219);
     border-radius: 8px;
   }
+
+  table {
+    white-space: nowrap;
+  }
+
+  .nav-item .active {
+    border-bottom: 2px solid #0d6efd;
+  }
+
+  .nav-link:not(.active)  {
+    color:gray !important;
+  }
+
+
 </style>
 
 
 
 <div class="mx-4 mt-5 d-flex flex-column gap-4">
-  <div class="d-flex justify-content-between">
+  <div class="d-flex justify-content-between mx-md-5 mx-2">
     <h3 class="fw-bold">Dashboard</h3>
     <a class="btn btn-primary" [routerLink]="'/convert'">
       <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"  stroke="white" xmlns="http://www.w3.org/2000/svg">
@@ -47,7 +46,7 @@
 
 
   <div class="container my-3" *ngIf="this.dashboardData">
-    <ul class="nav nav-tabs mb-4" id="dashboardTab" role="tablist">
+    <ul class="nav  mb-4" id="dashboardTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button"
           role="tab" aria-controls="overview" aria-selected="true">
@@ -155,7 +154,7 @@
                     </g>
                   </svg>
                 </div>
-                <h3 class="fw-bold">{{this.dashboardData.successRate.total}}%</h3>
+                <h3 class="fw-bold">{{this.dashboardData.successRate.total | number:'1.2-2'}}%</h3>
                 <small class="text-muted" *ngIf="this.dashboardData.successRate.difference">{{this.dashboardData.successRate.difference}}% from last month</small>
               </div>
             </div>
@@ -184,11 +183,11 @@
                     <td>{{row.date | date}}</td>
                     <td>
                       <span *ngIf="row.status == 'success'" class="badge bg-success">Success</span>
-                      <span *ngIf="row.status == 'failed'" class="badge bg-success">Failed</span>
+                      <span *ngIf="row.status == 'failed'" class="badge bg-danger">Failed</span>
                     </td>
                     <td>
-                      <button class="btn btn-light btn-sm">
-                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                      <button class="btn btn-light btn-sm" *ngIf="row.status == 'success'">
+                        <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" (click)="this.downloadFile(row.idInternal)"
                           xmlns="http://www.w3.org/2000/svg">
                           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                           <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -212,7 +211,7 @@
 
       <div class="tab-pane fade" id="analytics" role="tabpanel" aria-labelledby="analytics-tab">
         <div class="row">
-          <div class="col-8">
+          <div class="col-md-8 col-12">
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title">Most Popular Conversions</h5>
@@ -224,7 +223,7 @@
             </div>
           </div>
 
-          <div class="col-4 mb-4">
+          <div class="col-md-4 col-12 mb-4">
             <div class="card h-100">
               <div class="card-body">
                 <h5 class="card-title">Conversion Details</h5>
@@ -316,13 +315,13 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let row of this.dashboardData.activity">
+                  <tr *ngFor="let row of this.dashboardData.activity | slice:(this.page * this.rowsPerPage):((this.page + 1) * this.rowsPerPage)">
                     <td>{{row.filename}}</td>
                     <td>{{row.inputFormat}} → {{row.outputFormat}}</td>
                     <td>{{row.date | date}}</td>
                     <td>
                       <span *ngIf="row.status == 'success'" class="badge bg-success">Success</span>
-                      <span *ngIf="row.status == 'failed'" class="badge bg-success">Failed</span>
+                      <span *ngIf="row.status == 'failed'" class="badge bg-danger">Failed</span>
                     </td>
                     <td>
                       <button class="btn btn-light btn-sm">
@@ -344,6 +343,38 @@
                 </tbody>
               </table>
             </div>
+            <div class="mt-2 paging" >
+              <div class="d-flex align-items-center justify-content-center justify-content-md-end">
+                  <div class="d-flex align-items-center">
+                      <div class="me-2">Rows per page: </div>
+                      <div class="btn-group">
+                          <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-arrow" data-bs-toggle="dropdown" aria-expanded="false">
+                              {{this.rowsPerPage}}
+                          </button>
+                          <ul class="dropdown-menu">
+                              <li><span class="dropdown-item cursor-pointer" (click)="this.rowsPerPage = 10">10</span></li>
+                              <li><span class="dropdown-item cursor-pointer" (click)="this.rowsPerPage = 20">20</span></li>
+                              <li><span class="dropdown-item cursor-pointer" (click)="this.rowsPerPage = 50">50</span></li>
+                          </ul>
+                      </div>
+                  </div>
+                  <div class="mx-3">
+                    {{this.page * rowsPerPage + 1}}-{{(this.page + 1) * rowsPerPage}} of {{this.dashboardData.activity.length}}
+                  </div>
+                  <div class="d-flex">
+                      <button class="btn btn-light me-4"  (click)="this.goToPrevPage()" [disabled]="this.page == 0">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none">
+                              <path d="M7.70492 1.41L6.29492 0L0.294922 6L6.29492 12L7.70492 10.59L3.12492 6L7.70492 1.41Z" fill="black" fill-opacity="0.56" />
+                          </svg>
+                      </button>
+                      <button class="btn btn-light" (click)="this.goToNextPage()" [disabled]="(this.page + 1) * this.rowsPerPage > this.dashboardData.activity.length" >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="8" height="12" viewBox="0 0 8 12" fill="none" style="transform: rotate(180deg)">
+                              <path d="M7.70492 1.41L6.29492 0L0.294922 6L6.29492 12L7.70492 10.59L3.12492 6L7.70492 1.41Z" fill="black" fill-opacity="0.56" />
+                          </svg>
+                      </button>
+                  </div>
+              </div>
+          </div>
           </div>
         </div>
       </div>
@@ -353,30 +384,3 @@
 </div>
 
 
-
-
-<script>
-  let chart = bb.generate({
-      data: {
-          columns: [
-              ["Blue", 2],
-              ["orange", 4],
-              ["green", 3],
-          ],
-          type: "donut",
-          onclick: function (d, i) {
-              console.log("onclick", d, i);
-          },
-          onover: function (d, i) {
-              console.log("onover", d, i);
-          },
-          onout: function (d, i) {
-              console.log("onout", d, i);
-          },
-      },
-      donut: {
-          title: "70",
-      },
-      bindto: "#donut-chart",
-  });
-</script>
