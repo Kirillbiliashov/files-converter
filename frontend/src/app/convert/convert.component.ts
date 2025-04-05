@@ -120,6 +120,7 @@ export class ConvertComponent implements OnInit {
     const formData = new FormData();
     formData.append('file', fileItem.file);
     formData.append('outputFormat', fileItem.selectedFormat.toLowerCase());
+    formData.append('filename', fileItem.newFilename ?? "");
     fileItem.status = "Converting";
 
     this.http.post<{ conversion: Conversion }>(`https://localhost:7099/api/convert`, formData)
@@ -196,7 +197,7 @@ export class ConvertComponent implements OnInit {
     const formData = new FormData();
 
     const metadata = this.selectedFiles.map((fileItem, index) => ({
-      fileName: fileItem.file.name,
+      fileName: fileItem.newFilename,
       outputFormat: fileItem.selectedFormat,
       id: fileItem.id
     }));

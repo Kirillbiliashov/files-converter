@@ -55,11 +55,11 @@ namespace backend.Controllers
         }
 
         [HttpPost("")]
-        public async Task<IActionResult> ConvertFile(IFormFile file, [FromForm] string outputFormat)
+        public async Task<IActionResult> ConvertFile(IFormFile file, [FromForm] string outputFormat, [FromForm] string? filename)
         {
             try
             {
-                var conversion = await ConvertFileAsync(file, outputFormat.ToLower());
+                var conversion = await ConvertFileAsync(file, outputFormat.ToLower(), filename);
                 return Ok(new { Conversion = conversion });
             }
             catch (Exception e)
@@ -85,7 +85,7 @@ namespace backend.Controllers
             var tasks = new Dictionary<string, Task<Conversion>>();
             foreach (var f in filesWithMetadata)
             {
-                tasks[f.Second.Id] = ConvertFileAsync(f.First, f.Second.OutputFormat.ToLower());
+                tasks[f.Second.Id] = ConvertFileAsync(f.First, f.Second.OutputFormat.ToLower(), f.Second.FileName);
             }
 
             await Task.WhenAll(tasks.Values);
@@ -97,7 +97,7 @@ namespace backend.Controllers
             }));
         }
 
-        private async Task<Conversion> ConvertFileAsync(IFormFile file, string outputFormat)
+        private async Task<Conversion> ConvertFileAsync(IFormFile file, string outputFormat, string? filename)
         {
             var sw = Stopwatch.StartNew();
 
@@ -106,6 +106,11 @@ namespace backend.Controllers
             var tempId = Guid.NewGuid();
             var inputFilePath = Path.Combine(tempPath, file.FileName);
             var outputFilePath = inputFilePath.Replace(inputFileExtension, $".{outputFormat}");
+            if (!string.IsNullOrWhiteSpace(filename))
+            {
+
+                outputFilePath = outputFilePath.Replace(Path.GetFileNameWithoutExtension(file.FileName), filename);
+            }
 
             try
             {

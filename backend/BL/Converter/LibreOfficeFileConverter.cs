@@ -64,13 +64,14 @@ namespace backend.BL.Converter
                 string error = await process.StandardError.ReadToEndAsync();
                 await process.WaitForExitAsync();
 
-                if (process.ExitCode != 0 || !System.IO.File.Exists(outputFilePath))
+                var generatedFilePath = inputFilePath.Replace(inputFileFormat, outputFormat);
+                if (process.ExitCode != 0 || !System.IO.File.Exists(generatedFilePath))
                 {
                     throw new Exception($"Conversion failed. Error: {error}");
                 }
 
-                var bytes = await System.IO.File.ReadAllBytesAsync(outputFilePath);
-                var filename = Path.GetFileNameWithoutExtension(inputFilePath);
+                var bytes = await System.IO.File.ReadAllBytesAsync(generatedFilePath);
+                var filename = Path.GetFileNameWithoutExtension(outputFilePath);
                 return new ConversionResult
                 {
                     OutputBytes = bytes,
