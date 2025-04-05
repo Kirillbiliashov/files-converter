@@ -4,118 +4,293 @@
         background-color: #f5f7fb !important;
         /* Adjust as needed */
     }
-    table th, table td {
-    background-color: transparent !important;
-    white-space: nowrap;
-}
 
-.warning-badge {
-    color: rgb(165, 107, 0) !important;
-    background-color: rgb(253, 253, 237) !important;
-    border: 1px solid rgb(248, 248, 153) !important;
-}
+    table th,
+    table td {
+        background-color: transparent !important;
+        white-space: nowrap;
+    }
 
-.success-badge {
-    color: rgb(0, 165, 25) !important;
-    background-color: rgb(237, 253, 237) !important;
-    border: 1px solid rgb(153, 248, 177) !important;
-}
+    .warning-badge {
+        color: rgb(165, 107, 0) !important;
+        background-color: rgb(253, 253, 237) !important;
+        border: 1px solid rgb(248, 248, 153) !important;
+    }
 
-.danger-badge {
-    color: rgb(165, 0, 0) !important;
-    background-color: rgb(253, 237, 237) !important;
-    border: 1px solid rgb(248, 153, 153) !important;
-}
+    .success-badge {
+        color: rgb(0, 165, 25) !important;
+        background-color: rgb(237, 253, 237) !important;
+        border: 1px solid rgb(153, 248, 177) !important;
+    }
 
-.name-td {
-    width: 400px;
-    max-width: 400px; 
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-}
-.convert-btn:hover {
-    background-color: #c6dafc73;
-    border-color: #c6dafc73;
-}
-.delete-btn:hover {
-    background-color: #f9e6e691;
-    border-color: #f9e6e691;
-}
-.convert-btn, .delete-btn {
-    padding: 4px 8px !important;
-}
+    .danger-badge {
+        color: rgb(165, 0, 0) !important;
+        background-color: rgb(253, 237, 237) !important;
+        border: 1px solid rgb(248, 153, 153) !important;
+    }
 
-.format-td {
-    width: 110px
-}
-
-@media (max-width: 768px) { 
     .name-td {
-        min-width: 200px;
-    max-width: 200px; 
-}
+        width: 400px;
+        max-width: 400px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .convert-btn:hover {
+        background-color: #c6dafc73;
+        border-color: #c6dafc73;
+    }
+
+    .delete-btn:hover {
+        background-color: #f9e6e691;
+        border-color: #f9e6e691;
+    }
+
+    .convert-btn,
+    .delete-btn {
+        padding: 4px 8px !important;
+    }
+
+    .format-td {
+        width: 110px
+    }
+
+    .rename-info-container {
+        background: #cae9fb61
+    }
+
+    .rename-info-container span {
+        color: #263cb7;
+        font-size: 0.95rem;
+    }
+
+    .rename-pattern {
+        background: #b3d2fb61;
+        padding: 1px 6px;
+        color: #172889;
+    }
+
+    .rename-pattern-dropdown {
+        background-color: rgb(236, 236, 236);
+        padding: 2px 6px;
+        font-weight: 500;
+
+    }
+
+    @media (max-width: 768px) {
+        .name-td {
+            min-width: 200px;
+            max-width: 200px;
+        }
 
 
-.format-td {
-    min-width: 110px !important;
-}
+        .format-td {
+            min-width: 110px !important;
+        }
 
-.new-name-td {
-    min-width: 300px;
-}
-}
+        .new-name-td {
+            min-width: 300px;
+        }
+
+    }
+
+    .pattern-dropdown button {
+        background-color: white;
+    }
+
+    .pattern-dropdown button::after {
+        display: none;
+    }
+
+    .pattern-dropdown,  .pattern-dropdown button  {
+        border-color: transparent !important;
+        box-shadow: none !important;  
+
+    }
 </style>
-  <div  class="mx-4 mt-5 d-flex flex-column gap-4">
-    <div class="row g-2">
-        <div  class="col-12 col-md-auto">
-            <div >
+<div class="mx-4 mt-5 d-flex flex-column" style="min-height: 500px">
+    <div class="row g-2" >
+        <div class="col-12 col-md-auto">
+            <div>
                 <div class="dropdown">
                     <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <svg class="mb-1" width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="white" stroke-width="0.72"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M12.5535 2.49392C12.4114 2.33852 12.2106 2.25 12 2.25C11.7894 2.25 11.5886 2.33852 11.4465 2.49392L7.44648 6.86892C7.16698 7.17462 7.18822 7.64902 7.49392 7.92852C7.79963 8.20802 8.27402 8.18678 8.55352 7.88108L11.25 4.9318V16C11.25 16.4142 11.5858 16.75 12 16.75C12.4142 16.75 12.75 16.4142 12.75 16V4.9318L15.4465 7.88108C15.726 8.18678 16.2004 8.20802 16.5061 7.92852C16.8118 7.64902 16.833 7.17462 16.5535 6.86892L12.5535 2.49392Z" fill="white"></path> <path d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z" fill="white"></path> </g></svg>
+                        <svg class="mb-1" width="16px" height="16px" viewBox="0 0 24 24" fill="none"
+                            xmlns="http://www.w3.org/2000/svg" stroke="white" stroke-width="0.72">
+                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                            <g id="SVGRepo_iconCarrier">
+                                <path
+                                    d="M12.5535 2.49392C12.4114 2.33852 12.2106 2.25 12 2.25C11.7894 2.25 11.5886 2.33852 11.4465 2.49392L7.44648 6.86892C7.16698 7.17462 7.18822 7.64902 7.49392 7.92852C7.79963 8.20802 8.27402 8.18678 8.55352 7.88108L11.25 4.9318V16C11.25 16.4142 11.5858 16.75 12 16.75C12.4142 16.75 12.75 16.4142 12.75 16V4.9318L15.4465 7.88108C15.726 8.18678 16.2004 8.20802 16.5061 7.92852C16.8118 7.64902 16.833 7.17462 16.5535 6.86892L12.5535 2.49392Z"
+                                    fill="white"></path>
+                                <path
+                                    d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z"
+                                    fill="white"></path>
+                            </g>
+                        </svg>
                         <span class="ms-2">Choose files</span>
                     </button>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" (click)="fileInput.click()" >From My Device</a></li>
+                        <li><a class="dropdown-item" (click)="fileInput.click()">From My Device</a></li>
                         <li>
-                            <a class="dropdown-item cursor-pointer" (click)="this.selectGoogleFile()" *ngIf="this.accessToken" >From Google Drive</a>
-                            <a class="dropdown-item cursor-pointer" (click)="this.loginWithGoogle()" *ngIf="!this.accessToken">Connect Google Drive</a>
+                            <a class="dropdown-item cursor-pointer" (click)="this.selectGoogleFile()"
+                                *ngIf="this.accessToken">From Google Drive</a>
+                            <a class="dropdown-item cursor-pointer" (click)="this.loginWithGoogle()"
+                                *ngIf="!this.accessToken">Connect Google Drive</a>
                         </li>
-                      </ul>
+                    </ul>
                 </div>
             </div>
-            <input #fileInput multiple class="form-control d-none" type="file" id="formFile" (change)="this.onFileSelected($event)">
+            <input #fileInput multiple class="form-control d-none" type="file" id="formFile"
+                (change)="this.onFileSelected($event)">
         </div>
 
         <div class="col-12 col-md-auto d-flex gap-2">
             <div class="flex-grow-1">
-                <button class="btn btn-outline-primary" (click)="convertAllFiles()" [disabled]="this.selectedFiles.length == 0">
-                    <svg class="mb-1" fill="#0061ff" width="14px" height="14px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#0061ff" stroke-width="0.72"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M1,12A11,11,0,0,1,17.882,2.7l1.411-1.41A1,1,0,0,1,21,2V6a1,1,0,0,1-1,1H16a1,1,0,0,1-.707-1.707l1.128-1.128A8.994,8.994,0,0,0,3,12a1,1,0,0,1-2,0Zm21-1a1,1,0,0,0-1,1,9.01,9.01,0,0,1-9,9,8.9,8.9,0,0,1-4.42-1.166l1.127-1.127A1,1,0,0,0,8,17H4a1,1,0,0,0-1,1v4a1,1,0,0,0,.617.924A.987.987,0,0,0,4,23a1,1,0,0,0,.707-.293L6.118,21.3A10.891,10.891,0,0,0,12,23,11.013,11.013,0,0,0,23,12,1,1,0,0,0,22,11Z"></path></g></svg>
+                <button class="btn btn-outline-primary" (click)="convertAllFiles()"
+                    [disabled]="this.selectedFiles.length == 0">
+                    <svg class="mb-1" fill="#0061ff" width="14px" height="14px" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg" stroke="#0061ff" stroke-width="0.72">
+                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                        <g id="SVGRepo_iconCarrier">
+                            <path
+                                d="M1,12A11,11,0,0,1,17.882,2.7l1.411-1.41A1,1,0,0,1,21,2V6a1,1,0,0,1-1,1H16a1,1,0,0,1-.707-1.707l1.128-1.128A8.994,8.994,0,0,0,3,12a1,1,0,0,1-2,0Zm21-1a1,1,0,0,0-1,1,9.01,9.01,0,0,1-9,9,8.9,8.9,0,0,1-4.42-1.166l1.127-1.127A1,1,0,0,0,8,17H4a1,1,0,0,0-1,1v4a1,1,0,0,0,.617.924A.987.987,0,0,0,4,23a1,1,0,0,0,.707-.293L6.118,21.3A10.891,10.891,0,0,0,12,23,11.013,11.013,0,0,0,23,12,1,1,0,0,0,22,11Z">
+                            </path>
+                        </g>
+                    </svg>
                     <span class="ms-2">Convert all</span>
                 </button>
             </div>
             <div class="flex-grow-1">
-                <button (click)="this.selectedFiles = []" class="btn btn-outline-danger" [disabled]="this.selectedFiles.length == 0">
-                    <svg class="mb-1"  width="18px" height="18px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M4 6H20M16 6L15.7294 5.18807C15.4671 4.40125 15.3359 4.00784 15.0927 3.71698C14.8779 3.46013 14.6021 3.26132 14.2905 3.13878C13.9376 3 13.523 3 12.6936 3H11.3064C10.477 3 10.0624 3 9.70951 3.13878C9.39792 3.26132 9.12208 3.46013 8.90729 3.71698C8.66405 4.00784 8.53292 4.40125 8.27064 5.18807L8 6M18 6V16.2C18 17.8802 18 18.7202 17.673 19.362C17.3854 19.9265 16.9265 20.3854 16.362 20.673C15.7202 21 14.8802 21 13.2 21H10.8C9.11984 21 8.27976 21 7.63803 20.673C7.07354 20.3854 6.6146 19.9265 6.32698 19.362C6 18.7202 6 17.8802 6 16.2V6M14 10V17M10 10V17" stroke="currentColor" stroke-width="1.512" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                <button (click)="this.selectedFiles = []" class="btn btn-outline-danger"
+                    [disabled]="this.selectedFiles.length == 0">
+                    <svg class="mb-1" width="18px" height="18px" viewBox="0 0 24 24" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                        <g id="SVGRepo_iconCarrier">
+                            <path
+                                d="M4 6H20M16 6L15.7294 5.18807C15.4671 4.40125 15.3359 4.00784 15.0927 3.71698C14.8779 3.46013 14.6021 3.26132 14.2905 3.13878C13.9376 3 13.523 3 12.6936 3H11.3064C10.477 3 10.0624 3 9.70951 3.13878C9.39792 3.26132 9.12208 3.46013 8.90729 3.71698C8.66405 4.00784 8.53292 4.40125 8.27064 5.18807L8 6M18 6V16.2C18 17.8802 18 18.7202 17.673 19.362C17.3854 19.9265 16.9265 20.3854 16.362 20.673C15.7202 21 14.8802 21 13.2 21H10.8C9.11984 21 8.27976 21 7.63803 20.673C7.07354 20.3854 6.6146 19.9265 6.32698 19.362C6 18.7202 6 17.8802 6 16.2V6M14 10V17M10 10V17"
+                                stroke="currentColor" stroke-width="1.512" stroke-linecap="round"
+                                stroke-linejoin="round"></path>
+                        </g>
+                    </svg>
                     <span> Remove All</span>
-                   </button>
+                </button>
             </div>
         </div>
     </div>
 
 
-    <div class="row align-items-center g-2">
+    <div class="row align-items-center g-2 mt-4">
         <div class="col-auto">
             <label for="renamePattern" class="col-form-label">
                 Rename pattern
             </label>
+            <svg (click)="this.displayRenameInfo = !this.displayRenameInfo" class="ms-1" style="cursor: pointer;"
+                width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                <g id="SVGRepo_iconCarrier">
+                    <circle cx="12" cy="12" r="10" stroke="#000000" stroke-width="1.5"></circle>
+                    <path
+                        d="M10.125 8.875C10.125 7.83947 10.9645 7 12 7C13.0355 7 13.875 7.83947 13.875 8.875C13.875 9.56245 13.505 10.1635 12.9534 10.4899C12.478 10.7711 12 11.1977 12 11.75V13"
+                        stroke="#000000" stroke-width="1.5" stroke-linecap="round"></path>
+                    <circle cx="12" cy="16" r="1" fill="#000000"></circle>
+                </g>
+            </svg>
         </div>
         <div class="col">
-            <input type="text" class="form-control" id="renamePattern"
-                placeholder="converted_{name}_{index}">
+            <div style=" position: relative">
+                <input type="text" class="form-control" id="renamePattern" [(ngModel)]="this.renamePattern" placeholder="converted_{name}_{index}">
+                <div class="dropdown pattern-dropdown" style="position: absolute; right: 1px; top: 2px;" >
+                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" 
+                        aria-expanded="false">
+                        <svg width="14px" height="14px" viewBox="0 0 1024 1024" class="icon" version="1.1" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="#000000"></path></g></svg>
+                    </button>
+                    <ul class="dropdown-menu pattern-list">
+                        <span class="fw-semibold ms-3">Insert variable:</span>
+                        <li>
+                            <button class="dropdown-item" (click)="this.updateRenamePattern('&#123;name&#125;')" >
+                                <span class="rename-pattern-dropdown">&#123;name&#125;</span>
+                                <span class="ms-3">Original filename without extension</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" (click)="this.updateRenamePattern('&#123;ext&#125;')">
+                                <span class="rename-pattern-dropdown">&#123;ext&#125;</span>
+                                <span class="ms-3">Original file extension</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" (click)="this.updateRenamePattern('&#123;index&#125;')">
+                                <span class="rename-pattern-dropdown">&#123;index&#125;</span>
+                                <span class="ms-3">Sequential number</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" (click)="this.updateRenamePattern('&#123;date&#125;')">
+                                <span class="rename-pattern-dropdown">&#123;date&#125;</span>
+                                <span class="ms-3">Current date (YYYY-MM-DD)</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" (click)="this.updateRenamePattern('&#123;time&#125;')">
+                                <span class="rename-pattern-dropdown">&#123;time&#125;</span>
+                                <span class="ms-3">Current time (HH:MM:SS)</span>
+                            </button>
+                        </li>
+                    </ul>
+
+                </div>
+            </div>
         </div>
         <div class="col-auto">
-            <button class="btn btn-primary">Apply Rename</button>
+            <button class="btn btn-primary" (click)="this.applyRename()">Apply Rename</button>
+        </div>
+    </div>
+    <div *ngIf="this.displayRenameInfo" class="d-flex p-3 mt-1 rounded-1 rename-info-container">
+        <svg style="margin-top: 2px" width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+            xmlns="http://www.w3.org/2000/svg" stroke="#0061ff" stroke-width="0.4800000000000001">
+            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+            <g id="SVGRepo_iconCarrier">
+                <path
+                    d="M12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V11C12.75 10.5858 12.4142 10.25 12 10.25C11.5858 10.25 11.25 10.5858 11.25 11V17C11.25 17.4142 11.5858 17.75 12 17.75Z"
+                    fill="#0061ff"></path>
+                <path
+                    d="M12 7C12.5523 7 13 7.44772 13 8C13 8.55228 12.5523 9 12 9C11.4477 9 11 8.55228 11 8C11 7.44772 11.4477 7 12 7Z"
+                    fill="#0061ff"></path>
+                <path fill-rule="evenodd" clip-rule="evenodd"
+                    d="M1.25 12C1.25 6.06294 6.06294 1.25 12 1.25C17.9371 1.25 22.75 6.06294 22.75 12C22.75 17.9371 17.9371 22.75 12 22.75C6.06294 22.75 1.25 17.9371 1.25 12ZM12 2.75C6.89137 2.75 2.75 6.89137 2.75 12C2.75 17.1086 6.89137 21.25 12 21.25C17.1086 21.25 21.25 17.1086 21.25 12C21.25 6.89137 17.1086 2.75 12 2.75Z"
+                    fill="#0061ff"></path>
+            </g>
+        </svg>
+        <div class="d-flex flex-column ms-1">
+            <span class="mb-1" style="font-weight: 500;">Available pattern variables:</span>
+            <div class="row">
+                <div class="col-auto d-flex flex-column gap-1">
+                    <div class="d-flex align-items-center">
+                        <span class="rename-pattern">&#123;name&#125; </span><span> - Original filename without
+                            extension</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="rename-pattern">&#123;index&#125;</span><span> - Sequential number</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="rename-pattern">&#123;time&#125;</span><span> - Current time (HH:MM:SS)</span>
+                    </div>
+                </div>
+                <div class="col-auto d-flex flex-column gap-1">
+                    <div class="d-flex align-items-center">
+                        <span class="rename-pattern">&#123;ext&#125;</span><span> - Original file extension</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="rename-pattern">&#123;date&#125;</span><span> - Current date (YYYY-MM-DD)</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -124,11 +299,13 @@
     </div>
 
 
-    <div class="table-responsive" style="max-height: 100%; overflow-y: scroll; " *ngIf="this.selectedFiles.length > 0">
+    <div class="table-responsive mt-4" style="max-height: 100%; overflow-y: scroll; "
+        *ngIf="this.selectedFiles.length > 0">
         <table class="table align-middle mb-0">
-            <thead >
-                <tr >
-                    <th class="text-muted fw-normal name-td" scope="col" style="background-color: transparent;">File</th>
+            <thead>
+                <tr>
+                    <th class="text-muted fw-normal name-td" scope="col" style="background-color: transparent;">File
+                    </th>
                     <th class="text-muted fw-normal" scope="col">Size</th>
                     <th class="text-muted fw-normal format-td" scope="col">Format</th>
                     <th class="text-muted fw-normal new-name-td" scope="col">New Name</th>
@@ -138,34 +315,73 @@
             </thead>
             <tbody>
                 <tr *ngFor="let fileItem of this.selectedFiles">
-                    <td class="name-td" >{{fileItem.file.name}}</td>
+                    <td class="name-td">{{fileItem.file.name}}</td>
                     <td style="width: 100px">{{fileItem.file.size | formatBytes}}</td>
                     <td class="format-td">
                         <select class="form-select form-select-sm" [(ngModel)]="fileItem.selectedFormat">
                             <option selected>Format</option>
-                            <option value="{{format}}" *ngFor="let format of fileItem.supportedFormats">{{format}}</option>
+                            <option value="{{format}}" *ngFor="let format of fileItem.supportedFormats">{{format}}
+                            </option>
                         </select>
                     </td>
                     <td class="new-name-td">
-                        <input type="text" class="form-control form-control-sm" placeholder="New file name">
+                        <input type="text" class="form-control form-control-sm" placeholder="New file name" [(ngModel)]="fileItem.newFilename">
                     </td>
                     <td style="width: 120px">
-                        <div *ngIf="fileItem.status == 'Converting'" style="color: #0061ff; border-width: 1.5px;" class="spinner-border spinner-border-sm" role="status">
+                        <div *ngIf="fileItem.status == 'Converting'" style="color: #0061ff; border-width: 1.5px;"
+                            class="spinner-border spinner-border-sm" role="status">
                             <span class="visually-hidden">Loading...</span>
-                          </div>
-                          <span class="badge badge-pill" [ngClass]="{'warning-badge': fileItem.status == 'Pending', 'success-badge': fileItem.status == 'Completed', 'danger-badge': fileItem.status == 'Failed'}">{{fileItem.status}}</span>
-                        </td>
+                        </div>
+                        <span class="badge badge-pill"
+                            [ngClass]="{'warning-badge': fileItem.status == 'Pending', 'success-badge': fileItem.status == 'Completed', 'danger-badge': fileItem.status == 'Failed'}">{{fileItem.status}}</span>
+                    </td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <button class="btn btn-light convert-btn" [disabled]="fileItem.status == 'Converting'" *ngIf="!fileItem.conversion" [disabled]="!fileItem.selectedFormat || fileItem.selectedFormat == 'Format'" >
-                                <svg (click)="convertFile(fileItem)" fill="#0061ff" width="16px" height="16px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#0061ff" stroke-width="0.72"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><path d="M1,12A11,11,0,0,1,17.882,2.7l1.411-1.41A1,1,0,0,1,21,2V6a1,1,0,0,1-1,1H16a1,1,0,0,1-.707-1.707l1.128-1.128A8.994,8.994,0,0,0,3,12a1,1,0,0,1-2,0Zm21-1a1,1,0,0,0-1,1,9.01,9.01,0,0,1-9,9,8.9,8.9,0,0,1-4.42-1.166l1.127-1.127A1,1,0,0,0,8,17H4a1,1,0,0,0-1,1v4a1,1,0,0,0,.617.924A.987.987,0,0,0,4,23a1,1,0,0,0,.707-.293L6.118,21.3A10.891,10.891,0,0,0,12,23,11.013,11.013,0,0,0,23,12,1,1,0,0,0,22,11Z"></path></g></svg>
+                            <button class="btn btn-light convert-btn" [disabled]="fileItem.status == 'Converting'"
+                                *ngIf="!fileItem.conversion"
+                                [disabled]="!fileItem.selectedFormat || fileItem.selectedFormat == 'Format'">
+                                <svg (click)="convertFile(fileItem)" fill="#0061ff" width="16px" height="16px"
+                                    viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#0061ff"
+                                    stroke-width="0.72">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path
+                                            d="M1,12A11,11,0,0,1,17.882,2.7l1.411-1.41A1,1,0,0,1,21,2V6a1,1,0,0,1-1,1H16a1,1,0,0,1-.707-1.707l1.128-1.128A8.994,8.994,0,0,0,3,12a1,1,0,0,1-2,0Zm21-1a1,1,0,0,0-1,1,9.01,9.01,0,0,1-9,9,8.9,8.9,0,0,1-4.42-1.166l1.127-1.127A1,1,0,0,0,8,17H4a1,1,0,0,0-1,1v4a1,1,0,0,0,.617.924A.987.987,0,0,0,4,23a1,1,0,0,0,.707-.293L6.118,21.3A10.891,10.891,0,0,0,12,23,11.013,11.013,0,0,0,23,12,1,1,0,0,0,22,11Z">
+                                        </path>
+                                    </g>
+                                </svg>
                             </button>
-                            <button class="btn btn-outline-primary btn-sm" *ngIf="fileItem.conversion" (click)="downloadFile(fileItem)">
-                                <svg class="mb-1" width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#0061ff" stroke-width="0.72"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z" fill="#0061ff"></path> <path d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z" fill="#0061ff"></path> </g></svg>
+                            <button class="btn btn-outline-primary btn-sm" *ngIf="fileItem.conversion"
+                                (click)="downloadFile(fileItem)">
+                                <svg class="mb-1" width="16px" height="16px" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg" stroke="#0061ff" stroke-width="0.72">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path
+                                            d="M12.5535 16.5061C12.4114 16.6615 12.2106 16.75 12 16.75C11.7894 16.75 11.5886 16.6615 11.4465 16.5061L7.44648 12.1311C7.16698 11.8254 7.18822 11.351 7.49392 11.0715C7.79963 10.792 8.27402 10.8132 8.55352 11.1189L11.25 14.0682V3C11.25 2.58579 11.5858 2.25 12 2.25C12.4142 2.25 12.75 2.58579 12.75 3V14.0682L15.4465 11.1189C15.726 10.8132 16.2004 10.792 16.5061 11.0715C16.8118 11.351 16.833 11.8254 16.5535 12.1311L12.5535 16.5061Z"
+                                            fill="#0061ff"></path>
+                                        <path
+                                            d="M3.75 15C3.75 14.5858 3.41422 14.25 3 14.25C2.58579 14.25 2.25 14.5858 2.25 15V15.0549C2.24998 16.4225 2.24996 17.5248 2.36652 18.3918C2.48754 19.2919 2.74643 20.0497 3.34835 20.6516C3.95027 21.2536 4.70814 21.5125 5.60825 21.6335C6.47522 21.75 7.57754 21.75 8.94513 21.75H15.0549C16.4225 21.75 17.5248 21.75 18.3918 21.6335C19.2919 21.5125 20.0497 21.2536 20.6517 20.6516C21.2536 20.0497 21.5125 19.2919 21.6335 18.3918C21.75 17.5248 21.75 16.4225 21.75 15.0549V15C21.75 14.5858 21.4142 14.25 21 14.25C20.5858 14.25 20.25 14.5858 20.25 15C20.25 16.4354 20.2484 17.4365 20.1469 18.1919C20.0482 18.9257 19.8678 19.3142 19.591 19.591C19.3142 19.8678 18.9257 20.0482 18.1919 20.1469C17.4365 20.2484 16.4354 20.25 15 20.25H9C7.56459 20.25 6.56347 20.2484 5.80812 20.1469C5.07435 20.0482 4.68577 19.8678 4.40901 19.591C4.13225 19.3142 3.9518 18.9257 3.85315 18.1919C3.75159 17.4365 3.75 16.4354 3.75 15Z"
+                                            fill="#0061ff"></path>
+                                    </g>
+                                </svg>
                                 <span class="ms-2">Download</span>
                             </button>
                             <button class="btn btn-light delete-btn">
-                                <svg (click)="this.deleteFile(fileItem)"  style="cursor: pointer;" class="cursor-pointer" width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M4 6H20M16 6L15.7294 5.18807C15.4671 4.40125 15.3359 4.00784 15.0927 3.71698C14.8779 3.46013 14.6021 3.26132 14.2905 3.13878C13.9376 3 13.523 3 12.6936 3H11.3064C10.477 3 10.0624 3 9.70951 3.13878C9.39792 3.26132 9.12208 3.46013 8.90729 3.71698C8.66405 4.00784 8.53292 4.40125 8.27064 5.18807L8 6M18 6V16.2C18 17.8802 18 18.7202 17.673 19.362C17.3854 19.9265 16.9265 20.3854 16.362 20.673C15.7202 21 14.8802 21 13.2 21H10.8C9.11984 21 8.27976 21 7.63803 20.673C7.07354 20.3854 6.6146 19.9265 6.32698 19.362C6 18.7202 6 17.8802 6 16.2V6M14 10V17M10 10V17" stroke="#e32400" stroke-width="1.512" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                                <svg (click)="this.deleteFile(fileItem)" style="cursor: pointer;" class="cursor-pointer"
+                                    width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path
+                                            d="M4 6H20M16 6L15.7294 5.18807C15.4671 4.40125 15.3359 4.00784 15.0927 3.71698C14.8779 3.46013 14.6021 3.26132 14.2905 3.13878C13.9376 3 13.523 3 12.6936 3H11.3064C10.477 3 10.0624 3 9.70951 3.13878C9.39792 3.26132 9.12208 3.46013 8.90729 3.71698C8.66405 4.00784 8.53292 4.40125 8.27064 5.18807L8 6M18 6V16.2C18 17.8802 18 18.7202 17.673 19.362C17.3854 19.9265 16.9265 20.3854 16.362 20.673C15.7202 21 14.8802 21 13.2 21H10.8C9.11984 21 8.27976 21 7.63803 20.673C7.07354 20.3854 6.6146 19.9265 6.32698 19.362C6 18.7202 6 17.8802 6 16.2V6M14 10V17M10 10V17"
+                                            stroke="#e32400" stroke-width="1.512" stroke-linecap="round"
+                                            stroke-linejoin="round"></path>
+                                    </g>
+                                </svg>
                             </button>
                         </div>
                     </td>
@@ -174,5 +390,4 @@
         </table>
     </div>
 
-  </div>
-
+</div>

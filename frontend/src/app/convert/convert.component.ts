@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,7 @@ import { FileAdapterService } from '../services/file-adapter-service';
 import { ConversionResult } from '../models/conversion-result';
 import { Conversion } from '../models/dashboard-data';
 import { AuthService } from '../services/auth-service';
+import { formatDate } from '@angular/common';
 
 @Component({
   selector: 'app-convert',
@@ -24,6 +25,8 @@ export class ConvertComponent implements OnInit {
   private allConvertFormats = ["PDF", "DOCX", "CSV", "XLSX", "TXT", "RTF", "HTML", "EPUB", "PNG", "JPG"];
   selectedFileName: string | undefined;
   accessToken: string | null = null;
+  displayRenameInfo = false;
+  renamePattern = "converted_{name}_{index}";
 
   constructor(
     private http: HttpClient,
@@ -224,6 +227,29 @@ export class ConvertComponent implements OnInit {
         }
       });
 
+  }
+
+  updateRenamePattern(pattern: string) {
+    this.renamePattern += pattern;
+  }
+
+  applyRename() {
+    const currentDate = new Date();
+    const formattedDate = formatDate(currentDate, 'yyyy-MM-dd', 'en-US');
+    const formattedTime = formatDate(currentDate, 'HH:mm:ss', 'en-US');
+
+    this.selectedFiles.forEach((f, idx) => {
+      const parts = f.file.name.split('.');
+      const ext = parts.pop();
+      const filename = parts.join('.');
+
+      f.newFilename = this.renamePattern
+        .replace(/{index}/g, (idx + 1).toString())
+        .replace(/{date}/g, formattedDate)
+        .replace(/{time}/g, formattedTime)
+        .replace(/{ext}/g, ext!)
+        .replace(/{name}/g, filename);
+    });
   }
 
 

@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class FileItem {
     public selectedFormat: string = "Format";
     public status = "Pending";
+    public newFilename: string | null = null;
     public conversion: Conversion | null = null;
     public id: string = uuidv4();
     constructor(
