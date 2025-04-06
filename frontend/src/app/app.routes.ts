@@ -4,10 +4,12 @@ import { LoginComponent } from './login/login.component';
 import { AuthGuard } from './guards/auth-guard';
 import { OauthCallbackComponent } from './oauth-callback/oauth-callback.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { SettingsComponent } from './settings/settings.component';
 
 export const routes: Routes = [
     { path: 'convert', component: ConvertComponent },
     { path: 'login', component: LoginComponent },
+    { path: 'settings', component: SettingsComponent },
     { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard]  },
     { path: 'oauth/callback', component: OauthCallbackComponent },
     { path: '**', redirectTo: 'convert' }
