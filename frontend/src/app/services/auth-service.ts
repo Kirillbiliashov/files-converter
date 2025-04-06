@@ -49,7 +49,6 @@ export class AuthService {
   }
 
   getCurrentUser(): CurrentUser | null {
-    console.log(`checking current user`)
     const tokenExpirationValue = localStorage.getItem(this.tokenExpirationKey);
     if (tokenExpirationValue && new Date(tokenExpirationValue.replace(/"/g, '')) <= new Date()) {
       this.logout(); // Clear expired session

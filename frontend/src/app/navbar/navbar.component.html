@@ -5,10 +5,13 @@
     <div class="container-fluid">
     <a class="navbar-brand text-light" href="#" >Files converter</a>
     <div class="d-flex align-items-center gap-4">
-        <ul class="navbar-nav mb-2 mb-lg-0">
-            <li class="nav-item ">
+        <ul class="navbar-nav mb-2 mb-lg-0 d-flex">
+            <li class="nav-item">
               <a *ngIf="this.currentRoute == '/convert' && this.currentUser" class="nav-link active text-light" aria-current="page" href="/dashboard">Dashboard</a>
               <a *ngIf="this.currentRoute == '/dashboard'" class="nav-link active text-light" aria-current="page" href="/convert">Convert</a>
+            </li>
+            <li class="nav-item" *ngIf="this.currentUser && this.currentRoute != '/settings'" style="cursor: pointer">
+              <a  class="nav-link active text-light" aria-current="page" (click)="this.navigateToSettings()">Settings</a>
             </li>
           </ul>
 

@@ -1,20 +1,24 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { UserInfo } from '../models/user-info';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'
 })
 export class SettingsComponent implements OnInit {
-
+  private route = inject(ActivatedRoute);
   userInfo!: UserInfo;
+  previousUrl: string | null = null;
 
-  constructor (private http: HttpClient) {}
+  constructor (
+    private http: HttpClient,
+    private router: Router) {}
 
   ngOnInit(): void {
     this.http.get<UserInfo>(`https://localhost:7099/api/user`)
@@ -25,6 +29,9 @@ export class SettingsComponent implements OnInit {
       error: (error) => {
         console.log(`error, ${error}`)
       }
+    });
+    this.route.queryParams.subscribe(params => {
+      this.previousUrl = params['from'];
     });
   }
 

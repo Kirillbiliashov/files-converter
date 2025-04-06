@@ -9,7 +9,7 @@ import { SettingsComponent } from './settings/settings.component';
 export const routes: Routes = [
     { path: 'convert', component: ConvertComponent },
     { path: 'login', component: LoginComponent },
-    { path: 'settings', component: SettingsComponent },
+    { path: 'settings', component: SettingsComponent, canActivate: [AuthGuard] },
     { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard]  },
     { path: 'oauth/callback', component: OauthCallbackComponent },
     { path: '**', redirectTo: 'convert' }
