@@ -3,6 +3,7 @@ using backend.BL.Converter;
 using backend.BL.Encryption;
 using backend.BL.Integrations;
 using backend.Services;
+using backend.Services.Background;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Data.SqlClient;
@@ -97,6 +98,8 @@ builder.Services.AddCors(options =>
                  .AllowAnyHeader()
                   .WithExposedHeaders("Content-Disposition"));
             });
+
+builder.Services.AddHostedService<DeleteFilesBackgroundService>();
 
 var app = builder.Build();
 
