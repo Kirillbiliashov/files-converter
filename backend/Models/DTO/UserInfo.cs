@@ -2,27 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace backend.Models.Db
+namespace backend.Models.DTO
 {
-    public class User: MongoDBDocument
+
+    [BsonIgnoreExtraElements]
+    public class UserInfo
     {
         [BsonElement("username")]
-        public string Username { get; set; }  
+        public string Username { get; set; }
 
         [BsonElement("email")]
         public string Email { get; set; }
-        
-        [BsonElement("passwordHash")]
-        [BsonIgnoreIfNull]
-        public string PasswordHash { get; set; } 
 
         [BsonElement("created")]
         public DateTime Created { get; set; }
 
         [BsonElement("lastLogin")]
         public DateTime LastLogin { get; set; }
+        
+        [BsonElement("providers")]
+        public List<UserProvider> Providers {get; set;}
+    }
+
+    [BsonIgnoreExtraElements]
+    public class UserProvider
+    {
+
+        [BsonElement("provider")]
+        public string Provider { get; set; }
     }
 }

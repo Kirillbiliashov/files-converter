@@ -61,11 +61,13 @@ namespace backend.Controllers
             }
 
             var hasher = new PasswordHasher<User>();
+            var currentDate = DateTime.UtcNow;
             var user = new User
             {
                 Username = request.Username,
                 Email = request.Email,
-                Created = DateTime.UtcNow
+                Created = currentDate,
+                LastLogin = currentDate
             };
             user.PasswordHash = hasher.HashPassword(user, request.Password);
 
@@ -98,6 +100,9 @@ namespace backend.Controllers
 
             var token = GenerateJwtToken(user.IdInternal);
             user.PasswordHash = null;
+
+            await UpdateUserLastLogin(user.Id);
+
             return Ok(new { token, user, tokenExpirationDate = JwtTokenExpirationTime });
         }
 
@@ -136,10 +141,18 @@ namespace backend.Controllers
             }
 
             await UpsertAccessToken(accessTokenResponse, user.IdInternal, body.provider);
+            await UpdateUserLastLogin(user.Id);
 
             var token = GenerateJwtToken(user.IdInternal);
 
             return Ok(new { token, user, tokenExpirationDate = JwtTokenExpirationTime });
+        }
+
+        private async Task UpdateUserLastLogin(ObjectId userId)
+        {
+            var filter = Builders<User>.Filter.Eq(doc => doc.Id, userId);
+            var update = Builders<User>.Update.Set(doc => doc.LastLogin, DateTime.UtcNow);
+            await _db.GetCollection<User>("users").UpdateOneAsync(filter, update);
         }
 
         private async Task UpsertAccessToken(AccessTokenResponse response, string userId, string provider)
