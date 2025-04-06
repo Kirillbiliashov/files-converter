@@ -18,7 +18,6 @@ namespace backend.Controllers
     [Route("api/user")]
     public class UserApiController : ControllerBase
     {
-
         private readonly IMongoDatabase _db;
         private readonly AzureBlobService _azureBlobService;
 
@@ -103,5 +102,32 @@ namespace backend.Controllers
 
             return NoContent();
         }
+
+        [Authorize]
+        [HttpPost("update-preferences")]
+        public async Task<IActionResult> UpdatePreferences([FromBody] UpdatePreferencesBody body)
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            var userId = identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var filter = Builders<User>.Filter.Eq("_id", ObjectId.Parse(userId));
+            var update = Builders<User>.Update.Combine(
+                Builders<User>.Update.Set("deleteFiles", body.DeleteFilesAutomatically)
+            );
+
+            await _db.GetCollection<User>("users").UpdateOneAsync(filter, update);
+
+            return Ok();
+        }
     }
+
+    public class UpdatePreferencesBody
+    {
+        public bool DeleteFilesAutomatically { get; set; }
+    }
+
 }

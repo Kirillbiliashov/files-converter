@@ -24,5 +24,8 @@ namespace backend.Models.Db
 
         [BsonElement("lastLogin")]
         public DateTime LastLogin { get; set; }
+
+        [BsonElement("deleteFiles")]
+        public bool DeleteFilesAutomatically { get; set; }
     }
 }

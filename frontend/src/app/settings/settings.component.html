@@ -1,12 +1,12 @@
 <style>
     .user-info-container span {
-        color:#444444;
+        color: #444444;
     }
 
-    /* .user-info-container {
-        background-color: rgba(241, 241, 241, 0.691);
-        border-top: 1px solid rgb(192, 192, 192);
-    } */
+    .form-check-input {
+        width: 50px;
+        height: 25px;
+    }
 </style>
 
 <div class="container my-4">
@@ -71,9 +71,24 @@
 
 
                     <div class="d-flex flex-column " *ngIf="this.userInfo">
-                        <div class="row d-flex user-info-container" >
+                        <div class="row d-flex user-info-container">
                             <div class="col-4 d-flex pb-3 " style="border: 2p solid black !important">
-                                <svg width="20px" height="20px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#444444"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"><title>ionicons-v5-j</title><path d="M344,144c-3.92,52.87-44,96-88,96s-84.15-43.12-88-96c-4-55,35-96,88-96S348,90,344,144Z" style="fill:none;stroke:#444444;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px"></path><path d="M256,304c-87,0-175.3,48-191.64,138.6C62.39,453.52,68.57,464,80,464H432c11.44,0,17.62-10.48,15.65-21.4C431.3,352,343,304,256,304Z" style="fill:none;stroke:#444444;stroke-miterlimit:10;stroke-width:32px"></path></g></svg>
+                                <svg width="20px" height="20px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"
+                                    fill="#444444">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <title>ionicons-v5-j</title>
+                                        <path
+                                            d="M344,144c-3.92,52.87-44,96-88,96s-84.15-43.12-88-96c-4-55,35-96,88-96S348,90,344,144Z"
+                                            style="fill:none;stroke:#444444;stroke-linecap:round;stroke-linejoin:round;stroke-width:32px">
+                                        </path>
+                                        <path
+                                            d="M256,304c-87,0-175.3,48-191.64,138.6C62.39,453.52,68.57,464,80,464H432c11.44,0,17.62-10.48,15.65-21.4C431.3,352,343,304,256,304Z"
+                                            style="fill:none;stroke:#444444;stroke-miterlimit:10;stroke-width:32px">
+                                        </path>
+                                    </g>
+                                </svg>
                                 <span class="ms-1 ">Name</span>
                             </div>
                             <div class="col-8 bg-white justify-content-center">
@@ -81,18 +96,27 @@
                             </div>
                         </div>
 
-                        <div class="row d-flex user-info-container" >
-                            <div class="col-4 d-flex pb-3" >
-                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path fill-rule="evenodd" clip-rule="evenodd" d="M3.75 5.25L3 6V18L3.75 18.75H20.25L21 18V6L20.25 5.25H3.75ZM4.5 7.6955V17.25H19.5V7.69525L11.9999 14.5136L4.5 7.6955ZM18.3099 6.75H5.68986L11.9999 12.4864L18.3099 6.75Z" fill="#444444"></path> </g></svg>
-                                <span class="ms-1" >Email</span>
+                        <div class="row d-flex user-info-container">
+                            <div class="col-4 d-flex pb-3">
+                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                            d="M3.75 5.25L3 6V18L3.75 18.75H20.25L21 18V6L20.25 5.25H3.75ZM4.5 7.6955V17.25H19.5V7.69525L11.9999 14.5136L4.5 7.6955ZM18.3099 6.75H5.68986L11.9999 12.4864L18.3099 6.75Z"
+                                            fill="#444444"></path>
+                                    </g>
+                                </svg>
+                                <span class="ms-1">Email</span>
                             </div>
                             <div class="col-8 bg-white">
                                 <p class="mb-0">{{this.userInfo.email}}</p>
                             </div>
                         </div>
 
-                        <div class="row d-flex user-info-container" >
-                            <div class="col-4 d-flex pb-3 " >
+                        <div class="row d-flex user-info-container">
+                            <div class="col-4 d-flex pb-3 ">
                                 <span class="ms-1">Sign-up Method</span>
                             </div>
                             <div class="col-8 bg-white">
@@ -105,9 +129,19 @@
                             </div>
                         </div>
 
-                        <div class="row d-flex user-info-container" >
-                            <div class="col-4 d-flex pb-3 " >
-                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M12 7V12H15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="#444444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                        <div class="row d-flex user-info-container">
+                            <div class="col-4 d-flex pb-3 ">
+                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path
+                                            d="M12 7V12H15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+                                            stroke="#444444" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round"></path>
+                                    </g>
+                                </svg>
                                 <span class="ms-1">Last Login</span>
                             </div>
                             <div class="col-8 bg-white">
@@ -115,9 +149,19 @@
                             </div>
                         </div>
 
-                        <div class="row d-flex user-info-container" >
-                            <div class="col-4 d-flex " >
-                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M3 10H21M7 3V5M17 3V5M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z" stroke="#444444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                        <div class="row d-flex user-info-container">
+                            <div class="col-4 d-flex ">
+                                <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path
+                                            d="M3 10H21M7 3V5M17 3V5M6.2 21H17.8C18.9201 21 19.4802 21 19.908 20.782C20.2843 20.5903 20.5903 20.2843 20.782 19.908C21 19.4802 21 18.9201 21 17.8V8.2C21 7.07989 21 6.51984 20.782 6.09202C20.5903 5.71569 20.2843 5.40973 19.908 5.21799C19.4802 5 18.9201 5 17.8 5H6.2C5.0799 5 4.51984 5 4.09202 5.21799C3.71569 5.40973 3.40973 5.71569 3.21799 6.09202C3 6.51984 3 7.07989 3 8.2V17.8C3 18.9201 3 19.4802 3.21799 19.908C3.40973 20.2843 3.71569 20.5903 4.09202 20.782C4.51984 21 5.07989 21 6.2 21Z"
+                                            stroke="#444444" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round"></path>
+                                    </g>
+                                </svg>
                                 <span class="ms-1">Registered On</span>
                             </div>
                             <div class="col-8 bg-white">
@@ -127,6 +171,23 @@
 
                     </div>
 
+                </div>
+            </div>
+
+            <!-- Preferences Card -->
+            <div class="card mt-4 p-2" >
+                <div class="card-body">
+                    <h3 class="card-title p-0 m-0 fw-semibold">Preferences</h3>
+                    <small class="text-muted">Manage your file storage and communication preferences</small>
+                    <div class="d-flex justify-content-between mt-4" *ngIf="this.userInfo">
+                        <div class="d-flex flex-column">
+                            <h6 class="p-0 m-0">Delete my files after 30 days</h6>
+                            <small class="text-muted" >Automatically remove your converted files from our servers after 30 days.</small>
+                        </div>
+                        <div class="form-check form-switch" >
+                            <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckChecked" (change)="onSwitchChanged()"  [(ngModel)]="this.userInfo.deleteFilesAutomatically" >
+                          </div>
+                    </div>
                 </div>
             </div>
 

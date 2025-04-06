@@ -21,6 +21,9 @@ namespace backend.Models.DTO
 
         [BsonElement("lastLogin")]
         public DateTime LastLogin { get; set; }
+
+        [BsonElement("deleteFiles")]
+        public bool DeleteFilesAutomatically { get; set; }
         
         [BsonElement("providers")]
         public List<UserProvider> Providers {get; set;}

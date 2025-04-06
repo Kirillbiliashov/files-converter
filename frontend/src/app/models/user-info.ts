@@ -4,6 +4,7 @@ export class UserInfo {
         public email: string, 
         public lastLogin: Date,
         public created: Date,
+        public deleteFilesAutomatically: boolean,
         public providers: LoginProvider[]
     ) {}
 }
