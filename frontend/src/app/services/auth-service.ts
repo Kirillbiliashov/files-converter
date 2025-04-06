@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { CurrentUser } from '../models/current-user';
 import { AuthResult } from '../models/auth-result';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -14,7 +15,7 @@ export class AuthService {
   private tokenExpirationKey = 'jwtTokenExpirationDate';
   private userKey = 'currentUser';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   login(email: string, password: string): Observable<AuthResult> {
     return this.http.post<AuthResult>(`${this.apiUrl}/login`, { email, password })
@@ -63,6 +64,7 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
     localStorage.removeItem(this.tokenExpirationKey);
+    this.router.navigate(['/login']);
   }
 
   private storeAuthData(response: AuthResult) {

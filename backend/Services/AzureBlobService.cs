@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 
@@ -46,6 +47,33 @@ namespace backend.Services
             await blobClient.DownloadToAsync(memoryStream);
 
             return memoryStream.ToArray();
+        }
+
+        public async Task<bool> DeleteFileAsync(string blobUrl)
+        {
+            var blobUri = new Uri(blobUrl);
+            string absolutePath = blobUri.AbsolutePath;
+            if (absolutePath.StartsWith("/"))
+            {
+                absolutePath = absolutePath.Substring(1);
+            }
+
+            string decodedBlobName = Uri.UnescapeDataString(absolutePath);
+            var segments = decodedBlobName.Split(new[] { '/' }, 2);
+            string blobName =  segments.Length > 1 ? segments[1] : segments[0];
+
+            var blobClient = _containerClient.GetBlobClient(blobName);
+
+            try
+            {
+                var response = await blobClient.DeleteIfExistsAsync();
+                return response.Value;
+            }
+            catch (RequestFailedException ex)
+            {
+                Console.WriteLine($"Error deleting blob: {ex.Message}");
+                return false;
+            }
         }
 
     }

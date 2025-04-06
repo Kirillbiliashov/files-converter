@@ -25,7 +25,6 @@ export class AppComponent {
 
       this.router.events.subscribe(() => {
         this.currentRoute = this.router.url.split('?')[0];
-        console.log(`current route: ${this.currentRoute}`)
         this.currentUser = authService.getCurrentUser();
 
         const hiddenRoutes = ['/login'];

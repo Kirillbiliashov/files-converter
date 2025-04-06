@@ -3,6 +3,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { UserInfo } from '../models/user-info';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { AuthService } from '../services/auth-service';
 
 @Component({
   selector: 'app-settings',
@@ -18,9 +19,16 @@ export class SettingsComponent implements OnInit {
 
   constructor (
     private http: HttpClient,
-    private router: Router) {}
+    private authService: AuthService) {}
 
   ngOnInit(): void {
+    this.loadUserInfo();
+    this.route.queryParams.subscribe(params => {
+      this.previousUrl = params['from'];
+    });
+  }
+
+  private loadUserInfo() {
     this.http.get<UserInfo>(`https://localhost:7099/api/user`)
     .subscribe({
       next: (userInfo) => {
@@ -30,8 +38,17 @@ export class SettingsComponent implements OnInit {
         console.log(`error, ${error}`)
       }
     });
-    this.route.queryParams.subscribe(params => {
-      this.previousUrl = params['from'];
+  }
+
+  deleteAccount() {
+    this.http.post(`https://localhost:7099/api/user/delete`, {})
+    .subscribe({
+      next: (response) => {
+        this.authService.logout();
+      },
+      error: (error) => {
+        console.log(`error, ${error}`)
+      }
     });
   }
 
