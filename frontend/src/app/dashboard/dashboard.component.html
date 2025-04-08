@@ -87,7 +87,7 @@
                 </div>
                 <div></div>
                 <h3 class="fw-bold" >{{dashboardData.conversions.total}}</h3>
-                <small class="text-muted" *ngIf="dashboardData.conversions.difference">{{dashboardData.conversions.difference}}% from last month</small>
+                <small  [ngClass]="{'text-success':dashboardData.conversions.difference > 0, 'text-danger': dashboardData.conversions.difference < 0 }" *ngIf="dashboardData.conversions.difference">{{dashboardData.conversions.difference > 0 ? '+' : ''}}{{dashboardData.conversions.difference | number:'1.0-2'}}% from last month</small>
               </div>
             </div>
           </div>
@@ -110,7 +110,7 @@
                   </svg>
                 </div>
                 <h3 class="fw-bold">{{dashboardData.uploaded.total}}</h3>
-                <small class="text-muted" *ngIf="dashboardData.uploaded.difference">{{dashboardData.uploaded.difference}}% from last month</small>
+                <small [ngClass]="{'text-success':dashboardData.uploaded.difference > 0, 'text-danger': dashboardData.uploaded.difference < 0 }" *ngIf="dashboardData.uploaded.difference">{{dashboardData.uploaded.difference > 0 ? '+' : ''}}{{dashboardData.uploaded.difference | number:'1.0-2'}}% from last month</small>
               </div>
             </div>
           </div>
@@ -132,7 +132,7 @@
                   </svg>
                 </div>
                 <h3 class="fw-bold">{{dashboardData.downloaded.total}}</h3>
-                <small class="text-muted" *ngIf="dashboardData.downloaded.difference">{{dashboardData.downloaded.difference}}% from last month</small>
+                <small [ngClass]="{'text-success':dashboardData.downloaded.difference > 0, 'text-danger': dashboardData.downloaded.difference < 0 }" *ngIf="dashboardData.downloaded.difference">{{dashboardData.downloaded.difference > 0 ? '+' : ''}}{{dashboardData.downloaded.difference | number:'1.0-2'}}% from last month</small>
               </div>
             </div>
           </div>
@@ -155,7 +155,7 @@
                   </svg>
                 </div>
                 <h3 class="fw-bold">{{this.dashboardData.successRate.total | number:'1.2-2'}}%</h3>
-                <small class="text-muted" *ngIf="this.dashboardData.successRate.difference">{{this.dashboardData.successRate.difference}}% from last month</small>
+                <small [ngClass]="{'text-success':dashboardData.successRate.difference > 0, 'text-danger': dashboardData.successRate.difference < 0 }" *ngIf="this.dashboardData.successRate.difference">{{dashboardData.successRate.difference > 0 ? '+' : ''}}{{this.dashboardData.successRate.difference | number:'1.0-2'}}% from last month</small>
               </div>
             </div>
           </div>
@@ -324,7 +324,7 @@
                       <span *ngIf="row.status == 'failed'" class="badge bg-danger">Failed</span>
                     </td>
                     <td>
-                      <button class="btn btn-light btn-sm">
+                      <button class="btn btn-light btn-sm" *ngIf="row.status == 'success'">
                         <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none"
                           xmlns="http://www.w3.org/2000/svg">
                           <g id="SVGRepo_bgCarrier" stroke-width="0"></g>

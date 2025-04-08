@@ -87,11 +87,13 @@ namespace backend.Controllers
             var datesThisMonth = dates.Where(d => d.Year == currentMonth.Year && d.Month == currentMonth.Month).Count();
             var datesLastMonth = dates.Where(d => d.Year == previousMonth.Year && d.Month == previousMonth.Month).Count();
 
+            Console.WriteLine($"Dates this month: {datesThisMonth}, dates last month: {datesLastMonth}");
+
             if (datesLastMonth == 0)
             {
                 return null;
             }
-            return ((datesThisMonth / datesLastMonth) - 1) * 100;
+            return (datesThisMonth - datesLastMonth) / (double)datesLastMonth * 100;
         }
 
     }

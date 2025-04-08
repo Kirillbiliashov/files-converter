@@ -25,10 +25,7 @@ export class DashboardComponent implements OnInit {
   rowsPerPage = 10;
   page: number = 0;
 
-  constructor(private http: HttpClient) {
-
-  }
-
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.http.get<DashboardData>(`https://localhost:7099/api/dashboard/stats`)
@@ -145,17 +142,13 @@ export class DashboardComponent implements OnInit {
     }
 
     private getDownloadFilename(contentDisposition: string): string {
-      // Split the header into parts using ';' as a delimiter.
       const parts = contentDisposition.split(';').map(part => part.trim());
-      // Look for the part that starts with 'filename=' but not 'filename*='
       const filenamePart = parts.find(part => part.startsWith('filename=') && !part.startsWith('filename*='));
   
       if (filenamePart) {
-        // Remove the "filename=" part and strip any surrounding quotes.
         return filenamePart.replace(/^filename="?/, '').replace(/"?$/, '');
       }
   
-      // Default filename if not found.
       return 'downloaded_file';
     }
 

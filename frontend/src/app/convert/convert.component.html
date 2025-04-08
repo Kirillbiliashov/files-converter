@@ -12,21 +12,18 @@
     }
 
     .warning-badge {
-        color: rgb(165, 107, 0) !important;
-        background-color: rgb(253, 253, 237) !important;
-        border: 1px solid rgb(248, 248, 153) !important;
+        color: white;
+        background-color: #00a3d7 !important;
     }
 
     .success-badge {
-        color: rgb(0, 165, 25) !important;
-        background-color: rgb(237, 253, 237) !important;
-        border: 1px solid rgb(153, 248, 177) !important;
+        color: white !important;
+        background-color: #3bbc32 !important;
     }
 
     .danger-badge {
-        color: rgb(165, 0, 0) !important;
-        background-color: rgb(253, 237, 237) !important;
-        border: 1px solid rgb(248, 153, 153) !important;
+        color: white !important;
+        background-color: #e32400 !important;
     }
 
     .name-td {
@@ -162,7 +159,7 @@
                     <span class="ms-2">Convert all</span>
                 </button>
             </div>
-            <div class="flex-grow-1">
+            <div class="flex-grow-1 d-flex justify-content-end" >
                 <button (click)="this.selectedFiles = []" class="btn btn-outline-danger"
                     [disabled]="this.selectedFiles.length == 0">
                     <svg class="mb-1" width="18px" height="18px" viewBox="0 0 24 24" fill="none"
@@ -184,7 +181,7 @@
 
 
     <div class="row align-items-center g-2 mt-4">
-        <div class="col-auto">
+        <div class="col-md-auto col-6 order-2 order-md-1">
             <label for="renamePattern" class="col-form-label">
                 Rename pattern
             </label>
@@ -201,7 +198,7 @@
                 </g>
             </svg>
         </div>
-        <div class="col">
+        <div class="col-md col-12 order-1 order-md-2">
             <div style=" position: relative">
                 <input type="text" class="form-control" id="renamePattern" [(ngModel)]="this.renamePattern" placeholder="converted_{name}_{index}">
                 <div class="dropdown pattern-dropdown" style="position: absolute; right: 1px; top: 2px;" >
@@ -246,7 +243,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-auto">
+        <div class="col-md-auto col-6 order-3 order-md-3 d-flex justify-content-end" >
             <button class="btn btn-primary" (click)="this.applyRename()">Apply Rename</button>
         </div>
     </div>
@@ -328,12 +325,12 @@
                         <input type="text" class="form-control form-control-sm" placeholder="New file name" [(ngModel)]="fileItem.newFilename">
                     </td>
                     <td style="width: 120px">
-                        <div *ngIf="fileItem.status == 'Converting'" style="color: #0061ff; border-width: 1.5px;"
-                            class="spinner-border spinner-border-sm" role="status">
+                        <div *ngIf="fileItem.status == 'Converting'"  style="color: #0061ff; border-width: 1.5px;"
+                            class="spinner-border spinner-border-sm me-1" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <span class="badge badge-pill"
-                            [ngClass]="{'warning-badge': fileItem.status == 'Pending', 'success-badge': fileItem.status == 'Completed', 'danger-badge': fileItem.status == 'Failed'}">{{fileItem.status}}</span>
+                        <span class="badge "
+                            [ngClass]="{'warning-badge': fileItem.status == 'Pending' || fileItem.status == 'Converting', 'success-badge': fileItem.status == 'Completed', 'danger-badge': fileItem.status == 'Failed'}">{{fileItem.status}}</span>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -352,9 +349,9 @@
                                     </g>
                                 </svg>
                             </button>
-                            <button class="btn btn-outline-primary btn-sm" *ngIf="fileItem.conversion"
+                            <button class="btn btn-light convert-btn" *ngIf="fileItem.conversion"
                                 (click)="downloadFile(fileItem)">
-                                <svg class="mb-1" width="16px" height="16px" viewBox="0 0 24 24" fill="none"
+                                <svg  width="18px" height="18px" viewBox="0 0 24 24" fill="none"
                                     xmlns="http://www.w3.org/2000/svg" stroke="#0061ff" stroke-width="0.72">
                                     <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                                     <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
@@ -367,7 +364,7 @@
                                             fill="#0061ff"></path>
                                     </g>
                                 </svg>
-                                <span class="ms-2">Download</span>
+                           
                             </button>
                             <button class="btn btn-light delete-btn">
                                 <svg (click)="this.deleteFile(fileItem)" style="cursor: pointer;" class="cursor-pointer"
