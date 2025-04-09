@@ -36,9 +36,9 @@ export class FileAdapterService {
 
     private ensureFilenameExtension(file: ICustomFile) {
         const mimeTypeToExtension: { [key: string]: string } = {
-            'application/vnd.google-apps.document': '.docx',      // Google Docs -> .docx
-            'application/vnd.google-apps.spreadsheet': '.xlsx',    // Google Sheets -> .xlsx
-            'application/vnd.google-apps.presentation': '.pptx',   // Google Slides -> .pptx
+            'application/vnd.google-apps.document': '.docx',    
+            'application/vnd.google-apps.spreadsheet': '.xlsx',   
+            'application/vnd.google-apps.presentation': '.pptx',   
             'application/vnd.google-apps.photo': '.jpg', 
              'application/vnd.google-apps.drawing': '.png'
         };

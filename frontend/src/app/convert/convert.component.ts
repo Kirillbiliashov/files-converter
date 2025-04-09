@@ -4,13 +4,17 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { FormatBytesPipe } from '../pipes/format-bytes-pipe';
-import { FileItem } from '../models/file-item';
+import { ConversionStatus, FileItem } from '../models/file-item';
 import { GooglePickerService } from '../services/google-picker-service';
 import { FileAdapterService } from '../services/file-adapter-service';
 import { ConversionResult } from '../models/conversion-result';
 import { Conversion } from '../models/dashboard-data';
 import { AuthService } from '../services/auth-service';
 import { formatDate } from '@angular/common';
+import { environment } from '../../environments/environment';
+import { ConvertService } from '../services/http/convert-service';
+import { StatsService } from '../services/http/stats-service';
+import { downloadBlob } from '../utils/files';
 
 @Component({
   selector: 'app-convert',
@@ -27,27 +31,22 @@ export class ConvertComponent implements OnInit {
   accessToken: string | null = null;
   displayRenameInfo = false;
   renamePattern = "converted_{name}_{index}";
+  Status = ConversionStatus;
 
   constructor(
-    private http: HttpClient,
+    private statsService: StatsService,
+    private convertService: ConvertService,
     private googlePickerService: GooglePickerService,
     private fileAdapterService: FileAdapterService,
     private cdr: ChangeDetectorRef,
     private authService: AuthService) { }
 
   async ngOnInit() {
-    this.http.get<{ accessToken: string }>(`https://localhost:7099/api/access-token?provider=Google`)
-      .subscribe({
-        next: async (response) => {
-          this.accessToken = response.accessToken;
-          await this.googlePickerService.loadPicker();
-        },
-        error: (error) => {
-          console.log(`error, ${error}`)
-          this.accessToken = null;
-        }
-      });
+    this.loadGoogleAccessToken();
+    this.listenGooglePicker();
+  }
 
+  listenGooglePicker() {
     this.googlePickerService.fileSelected$.subscribe((googleFile) => {
       console.log('File selected in component:', googleFile);
 
@@ -65,12 +64,26 @@ export class ConvertComponent implements OnInit {
     });
   }
 
+  loadGoogleAccessToken() {
+    this.authService.getGoogleAccessToken()
+      .subscribe({
+        next: async (response) => {
+          this.accessToken = response.accessToken;
+          await this.googlePickerService.loadPicker();
+        },
+        error: (error) => {
+          console.log(`error, ${error}`)
+          this.accessToken = null;
+        }
+      });
+  }
+
   selectGoogleFile() {
     this.googlePickerService.createPicker(this.accessToken!);
   }
 
   loginWithGoogle() {
-    window.location.href = 'https://localhost:7099/api/auth/login/oauth?provider=Google';
+    window.location.href = environment.apiBaseUrl + '/auth/login/oauth?provider=Google';
   }
 
   onFileSelected(event: Event) {
@@ -88,12 +101,7 @@ export class ConvertComponent implements OnInit {
 
 
     if (this.authService.getCurrentUser()) {
-      const body = Array.from(files).map(f => ({
-        type: "upload",
-        name: f.name,
-        size: f.size
-      }));
-      this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+      this.statsService.addUploadFilesStats(files).subscribe();
     }
   }
 
@@ -117,19 +125,13 @@ export class ConvertComponent implements OnInit {
   }
 
   convertFile(fileItem: FileItem) {
-    const formData = new FormData();
-    formData.append('file', fileItem.file);
-    formData.append('outputFormat', fileItem.selectedFormat.toLowerCase());
-    formData.append('filename', fileItem.newFilename ?? "");
-    fileItem.status = "Converting";
-
-    this.http.post<{ conversion: Conversion }>(`https://localhost:7099/api/convert`, formData)
+    fileItem.status = ConversionStatus.Converting;
+    this.convertService.convertFile(fileItem)
       .subscribe({
         next: (response) => {
-          fileItem.status = response.conversion.status == "success" ? "Completed" : "Failed";
+          fileItem.status = response.conversion.status == "success" ? ConversionStatus.Completed : ConversionStatus.Failed;
           fileItem.conversion = response.conversion;
           console.log(`conversion,  `, response.conversion);
-          // fileItem.convertedBlob = response.body;
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -141,29 +143,15 @@ export class ConvertComponent implements OnInit {
   downloadFile(fileItem: FileItem): void {
     if (!fileItem.conversion?.idInternal) return;
 
-    this.http.post(`https://localhost:7099/api/convert/download/${fileItem.conversion.idInternal}`, {}, { responseType: 'blob', observe: 'response' })
+    this.convertService.downloadConvertedFile(fileItem.conversion.idInternal)
       .subscribe({
         next: (response) => {
           const blob: Blob = response.body as Blob;
-
           const contentDisposition = response.headers.get('Content-Disposition');
-
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = this.getDownloadFilename(contentDisposition ?? "");
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
+          downloadBlob(blob, contentDisposition);
 
           if (this.authService.getCurrentUser()) {
-            const body = [{
-              name: fileItem.file.name,
-              size: fileItem.file.size,
-              type: "download"
-            }
-            ];
-            this.http.post(`https://localhost:7099/api/stats/add`, body).subscribe();
+            this.statsService.addDownloadFileStats(fileItem).subscribe();
           }
 
         },
@@ -171,57 +159,23 @@ export class ConvertComponent implements OnInit {
       })
   }
 
-
-  private getDownloadFilename(contentDisposition: string): string {
-    // Split the header into parts using ';' as a delimiter.
-    const parts = contentDisposition.split(';').map(part => part.trim());
-    // Look for the part that starts with 'filename=' but not 'filename*='
-    const filenamePart = parts.find(part => part.startsWith('filename=') && !part.startsWith('filename*='));
-
-    if (filenamePart) {
-      // Remove the "filename=" part and strip any surrounding quotes.
-      return filenamePart.replace(/^filename="?/, '').replace(/"?$/, '');
-    }
-
-    // Default filename if not found.
-    return 'downloaded_file';
-  }
-
-
-
   deleteFile(fileItem: FileItem) {
     this.selectedFiles = this.selectedFiles.filter(f => f != fileItem);
   }
 
   convertAllFiles() {
-    const formData = new FormData();
-
-    const metadata = this.selectedFiles.map((fileItem, index) => ({
-      fileName: fileItem.newFilename,
-      outputFormat: fileItem.selectedFormat,
-      id: fileItem.id
-    }));
-
-    this.selectedFiles.forEach(fileItem => {
-      formData.append('files', fileItem.file, fileItem.file.name);
-      fileItem.status = "Converting";
-    });
-
-    formData.append('metadata', JSON.stringify(metadata));
-
-    this.http.post<{ id: string, conversion: Conversion }[]>(`https://localhost:7099/api/convert/all`, formData)
+    this.selectedFiles.forEach(f => f.status = ConversionStatus.Converting);
+    this.convertService.convertFiles(this.selectedFiles)
       .subscribe({
         next: (response) => {
-          console.log(`convert all response, `, response);
           response.forEach(r => {
             const file = this.selectedFiles.find(f => f.id == r.id);
             if (file) {
               file.conversion = r.conversion;
             }
           })
-          this.selectedFiles.forEach(f => {
-            f.status = "Completed";
-          })
+           
+          this.selectedFiles.forEach(f => f.status = ConversionStatus.Completed);
         },
         error: (error) => {
           console.error('Error:', error);

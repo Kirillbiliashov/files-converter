@@ -5,12 +5,12 @@ import { tap } from 'rxjs/operators';
 import { CurrentUser } from '../models/current-user';
 import { AuthResult } from '../models/auth-result';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://localhost:7099/api/auth';
   private tokenKey = 'jwtToken';
   private tokenExpirationKey = 'jwtTokenExpirationDate';
   private userKey = 'currentUser';
@@ -18,7 +18,7 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   login(email: string, password: string): Observable<AuthResult> {
-    return this.http.post<AuthResult>(`${this.apiUrl}/login`, { email, password })
+    return this.http.post<AuthResult>(`${environment.apiBaseUrl}/auth/login`, { email, password })
       .pipe(
         tap(response => {
           this.storeAuthData(response);
@@ -27,7 +27,7 @@ export class AuthService {
   }
 
   register(username: string, email: string, password: string): Observable<AuthResult> {
-    return this.http.post<AuthResult>(`${this.apiUrl}/register`, { username, email, password })
+    return this.http.post<AuthResult>(`${environment.apiBaseUrl}/auth/register`, { username, email, password })
       .pipe(
         tap(response => {
           this.storeAuthData(response);
@@ -37,7 +37,7 @@ export class AuthService {
 
   processOauthLogin(code: string, provider: string): Observable<AuthResult> {
     const body = { code, provider };
-    return this.http.post<AuthResult>(`${this.apiUrl}/login/oauth/process`, body)
+    return this.http.post<AuthResult>(`${environment.apiBaseUrl}/auth/login/oauth/process`, body)
       .pipe(
         tap(response => {
           this.storeAuthData(response);
@@ -52,7 +52,7 @@ export class AuthService {
   getCurrentUser(): CurrentUser | null {
     const tokenExpirationValue = localStorage.getItem(this.tokenExpirationKey);
     if (tokenExpirationValue && new Date(tokenExpirationValue.replace(/"/g, '')) <= new Date()) {
-      this.logout(); // Clear expired session
+      this.logout(); 
       return null;
     }
 
@@ -74,6 +74,10 @@ export class AuthService {
     if (response.user) {
       localStorage.setItem(this.userKey, JSON.stringify(response.user));
     }
+  }
+
+  getGoogleAccessToken() {
+    return this.http.get<{ accessToken: string }>(`${environment.apiBaseUrl}/auth/access-token?provider=Google`)
   }
 
 }

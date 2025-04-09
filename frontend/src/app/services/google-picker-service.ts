@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 declare var gapi: any;
 declare var google: any;
@@ -8,7 +9,6 @@ declare var google: any;
   providedIn: 'root',
 })
 export class GooglePickerService {
-  private appId = '1008106191398-bbdjcb8o46kntkjochbbpcrj64o457lo.apps.googleusercontent.com'; 
   private fileSelectedSubject = new Subject<any>(); 
 
   fileSelected$: Observable<any> = this.fileSelectedSubject.asObservable();
@@ -32,7 +32,7 @@ export class GooglePickerService {
     const picker = new google.picker.PickerBuilder()
       .addView(google.picker.ViewId.DOCS)
       .setOAuthToken(accessToken) 
-      .setAppId(this.appId)
+      .setAppId(environment.googleAppId)
       .setCallback(this.pickerCallback.bind(this))
       .build();
 

@@ -5,6 +5,10 @@ import { RouterModule } from '@angular/router';
 import { Chart, ArcElement, DoughnutController, Tooltip, Legend } from 'chart.js';
 import { DashboardData } from '../models/dashboard-data';
 import { FormatBytesPipe } from '../pipes/format-bytes-pipe';
+import { StatsService } from '../services/http/stats-service';
+import { ConvertService } from '../services/http/convert-service';
+import { ChartService } from '../services/chart-service';
+import { downloadBlob } from '../utils/files';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,21 +18,26 @@ import { FormatBytesPipe } from '../pipes/format-bytes-pipe';
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit {
-
   dashboardData: DashboardData | null = null;
   mostConvertedFormat!: string;
   storageUsed!: number;
   averageFileSize!: number;
   mostActiveDay!: string;
   mostActiveTime!: string;
-  chart!: Chart;
   rowsPerPage = 10;
   page: number = 0;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private statsService: StatsService, 
+    private convertService: ConvertService, 
+    private chartService: ChartService) {}
 
   ngOnInit(): void {
-    this.http.get<DashboardData>(`https://localhost:7099/api/dashboard/stats`)
+    this.loadDashboardData();
+  }
+
+  loadDashboardData() {
+    this.statsService.getDashboardData()
       .subscribe({
         next: (response) => {
           console.log(`response:, `, response);
@@ -41,13 +50,13 @@ export class DashboardComponent implements OnInit {
           this.mostActiveTime = this.getMostActiveTime(activityDates);
 
           setTimeout(() => {
-            this.loadChart();
+            this.chartService.createChart(this.dashboardData!);
           }, 500);
         },
         error: (error) => {
           console.error('Error:', error);
         }
-      })
+      });
   }
 
   getKeyWithMaxValue(dict: Record<string, number>) {
@@ -90,75 +99,23 @@ export class DashboardComponent implements OnInit {
     return Object.keys(timeRanges).reduce((a, b) => (timeRanges[a] > timeRanges[b] ? a : b));
   }
 
-
-  loadChart() {
-    Chart.register(ArcElement, DoughnutController, Tooltip, Legend);
-    const ctx = document.getElementById('myChart') as HTMLCanvasElement;
-    if (ctx) {
-      this.chart = new Chart(ctx, {
-        type: 'doughnut', 
-        data: {
-          labels: Object.keys(this.dashboardData!.analytics),
-          datasets: [{
-            data: Object.values(this.dashboardData!.analytics)
-              .map(n => Number((n / this.dashboardData!.activity.length * 100).toFixed(1))),
-            backgroundColor: ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F']
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'bottom'
-            }
-          },
-          cutout: '50%'  
-        }
-      });
-    } else {
-      console.error("Canvas element not found!");
-    }
-  }
-
     downloadFile(conversionId: string): void {
-  
-      this.http.post(`https://localhost:7099/api/convert/download/${conversionId}`, {}, { responseType: 'blob', observe: 'response' })
+      this.convertService.downloadConvertedFile(conversionId)
         .subscribe({
           next: (response) => {
             const blob: Blob = response.body as Blob;
-  
             const contentDisposition = response.headers.get('Content-Disposition');
-  
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = this.getDownloadFilename(contentDisposition ?? "");
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
+            downloadBlob(blob, contentDisposition);
           },
           error: () => { }
         })
     }
 
-    private getDownloadFilename(contentDisposition: string): string {
-      const parts = contentDisposition.split(';').map(part => part.trim());
-      const filenamePart = parts.find(part => part.startsWith('filename=') && !part.startsWith('filename*='));
-  
-      if (filenamePart) {
-        return filenamePart.replace(/^filename="?/, '').replace(/"?$/, '');
-      }
-  
-      return 'downloaded_file';
-    }
-
     goToNextPage() {
-      console.log(`going to next page`)
       this.page++;
     }
 
     goToPrevPage() {
-      console.log(`going to prev page`)
       this.page--;
     }
 

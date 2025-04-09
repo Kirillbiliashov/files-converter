@@ -17,7 +17,6 @@
 </style>
 
 <div class="container my-4">
-    <!-- Back to Dashboard + Heading -->
     <div class="d-flex align-items-start mb-4 flex-column" *ngIf="this.previousUrl">
         <a [routerLink]="['/' + this.previousUrl]" class="btn btn-link px-0 mr-3 text-decoration-none fw-600">
             <svg class="mb-1" width="20px" height="20px" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +37,6 @@
         <span class="text-muted">Manage your account settings and preferences</span>
     </div>
 
-    <!-- Tabs for different settings sections -->
     <ul class="nav nav-tabs d-none" id="settingsTab" role="tablist">
         <li class="nav-item">
             <a class="nav-link active" id="account-tab" data-toggle="tab" href="#account" role="tab"
@@ -66,11 +64,8 @@
         </li>
     </ul>
 
-    <!-- Tab Content -->
     <div class="tab-content" id="settingsTabContent">
-        <!-- Account Tab -->
         <div class="tab-pane fade show active" id="account" role="tabpanel" aria-labelledby="account-tab">
-            <!-- Account Information Card -->
             <div class="card mt-4">
                 <div class="card-body">
                     <h3 class="card-title">Account Information</h3>
@@ -181,7 +176,6 @@
                 </div>
             </div>
 
-            <!-- Preferences Card -->
             <div class="card mt-4 p-2" >
                 <div class="card-body">
                     <h3 class="card-title p-0 m-0 fw-semibold">Preferences</h3>
@@ -198,7 +192,6 @@
                 </div>
             </div>
 
-            <!-- Danger Zone Card -->
             <div class="card mt-4 p-2" style="border: 0.5px solid red">
                 <div class="card-body">
                     <h3 class="card-title text-danger p-0 m-0 fw-semibold">Danger Zone</h3>
@@ -218,9 +211,7 @@
             </div>
         </div>
 
-        <!-- Preferences Tab (placeholder) -->
         <div class="tab-pane fade" id="preferences" role="tabpanel" aria-labelledby="preferences-tab">
-            <!-- Preferences content goes here -->
             <div class="card mt-4">
                 <div class="card-body">
                     <h2 class="card-title">Preferences</h2>
@@ -229,9 +220,7 @@
             </div>
         </div>
 
-        <!-- Notifications Tab (placeholder) -->
         <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
-            <!-- Notifications content goes here -->
             <div class="card mt-4">
                 <div class="card-body">
                     <h2 class="card-title">Notifications</h2>
@@ -240,9 +229,7 @@
             </div>
         </div>
 
-        <!-- Security Tab (placeholder) -->
         <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
-            <!-- Security content goes here -->
             <div class="card mt-4">
                 <div class="card-body">
                     <h2 class="card-title">Security</h2>

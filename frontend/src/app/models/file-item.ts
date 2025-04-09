@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class FileItem {
     public selectedFormat: string = "Format";
-    public status = "Pending";
+    public status = ConversionStatus.Pending;
     public newFilename: string | null = null;
     public conversion: Conversion | null = null;
     public id: string = uuidv4();
@@ -11,4 +11,11 @@ export class FileItem {
         public file: File,
         public supportedFormats: string[]
     ) {}
+}
+
+export enum ConversionStatus {
+    Pending = 'Pending',
+    Converting = 'Converting',
+    Completed = 'Completed',
+    Failed = 'Failed'
 }

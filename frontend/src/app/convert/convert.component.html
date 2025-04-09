@@ -1,8 +1,6 @@
 <style>
-    /* Custom background color to match your screenshot */
     body {
         background-color: #f5f7fb !important;
-        /* Adjust as needed */
     }
 
     table th,
@@ -325,16 +323,16 @@
                         <input type="text" class="form-control form-control-sm" placeholder="New file name" [(ngModel)]="fileItem.newFilename">
                     </td>
                     <td style="width: 120px">
-                        <div *ngIf="fileItem.status == 'Converting'"  style="color: #0061ff; border-width: 1.5px;"
+                        <div *ngIf="fileItem.status == Status.Converting"  style="color: #0061ff; border-width: 1.5px;"
                             class="spinner-border spinner-border-sm me-1" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
                         <span class="badge "
-                            [ngClass]="{'warning-badge': fileItem.status == 'Pending' || fileItem.status == 'Converting', 'success-badge': fileItem.status == 'Completed', 'danger-badge': fileItem.status == 'Failed'}">{{fileItem.status}}</span>
+                            [ngClass]="{'warning-badge': fileItem.status == Status.Pending || fileItem.status == Status.Converting, 'success-badge': fileItem.status == Status.Completed, 'danger-badge': fileItem.status == Status.Failed}">{{fileItem.status}}</span>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <button class="btn btn-light convert-btn" [disabled]="fileItem.status == 'Converting'"
+                            <button class="btn btn-light convert-btn" [disabled]="fileItem.status == Status.Converting"
                                 *ngIf="!fileItem.conversion"
                                 [disabled]="!fileItem.selectedFormat || fileItem.selectedFormat == 'Format'">
                                 <svg (click)="convertFile(fileItem)" fill="#0061ff" width="16px" height="16px"

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { passwordMatchValidator } from '../utils/validators';
 import { AuthService } from '../services/auth-service';
 import { Router, RouterModule } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -19,7 +20,7 @@ export class LoginComponent {
 
   userForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private authService: AuthService, private router: Router) {
+  constructor(fb: FormBuilder, private authService: AuthService, private router: Router) {
     this.userForm = fb.group({
       email: ['', [Validators.required, Validators.email]],
       confirmPassword: [''],
@@ -62,7 +63,6 @@ export class LoginComponent {
     this.formSubmitted = true; 
 
     if (this.userForm.valid) {
-
       if (this.showLogin) {
         const { email, password } = this.userForm.value;
         this.authService.login(email, password).subscribe({
@@ -84,27 +84,23 @@ export class LoginComponent {
 
       this.formSubmitted = false; 
       this.userForm.reset(); 
-
     } else {
 
       console.log('Form is invalid, errors: ', this.userForm.errors);
     }
   }
 
-
   onFieldChange() {
     this.formSubmitted = false;
     this.errorMessage = null;
   }
 
-
   loginWithGoogle() {
-    window.location.href = 'https://localhost:7099/api/auth/login/oauth?provider=Google';
+    window.location.href = `${environment.apiBaseUrl}/auth/login/oauth?provider=Google`;
   }
 
   loginWithDropbox() {
-    window.location.href = 'https://localhost:7099/api/auth/login/oauth?provider=Dropbox';
+    window.location.href = `${environment.apiBaseUrl}/auth/login/oauth?provider=Dropbox`;
   }
-
 
 }

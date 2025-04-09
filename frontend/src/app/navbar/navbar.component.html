@@ -1,64 +1,87 @@
 <style>
 </style>
 
-  <nav class="navbar navbar-expand-lg bg-primary">
-    <div class="container-fluid d-flex justify-content-between">
-      <div>
-        <a class="navbar-brand text-light" href="#">Files Converter</a>
-      </div>
-
-      <div class="d-flex align-items-center">
-        <div class="collapse navbar-collapse" id="navbarNavDropdown">
-          <ul class="navbar-nav">
-            <li class="nav-item">
-              <a *ngIf="this.currentRoute == '/convert' && this.currentUser" class="nav-link active text-light" aria-current="page" href="/dashboard">Dashboard</a>
-              <a *ngIf="this.currentRoute == '/dashboard'" class="nav-link active text-light" aria-current="page" href="/convert">Convert</a>
-            </li>
-            <li class="nav-item d-flex" *ngIf="this.currentUser && this.currentRoute != '/settings'" style="cursor: pointer">
-              <a  class="nav-link active text-light" aria-current="page" (click)="this.navigateToSettings()">Settings</a>
-            </li>
-            <li class="nav-item d-flex" *ngIf="this.currentRoute == '/settings'">
-              <a class="nav-link active text-light" aria-current="page" href="/dashboard">Dashboard</a>
-            </li>
-            <li class="nav-item d-flex" *ngIf="this.currentRoute == '/settings'">
-              <a  class="nav-link active text-light" aria-current="page" href="/convert">Convert</a>
-            </li>
-            <li class="nav-item" *ngIf="!currentUser" >
-              <a class="nav-link active text-light" aria-current="page" href="/login">Log in</a>
-          </li>
-          </ul>
-        </div>
-        <div class=" ms-3 btn-group dropstart" *ngIf="currentUser" >
-          <svg style="cursor: pointer" width="18px" height="18px" viewBox="0 0 24 24" data-bs-toggle="dropdown" aria-expanded="false" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
-          <ul class="dropdown-menu">
-              <li><a class="dropdown-item">
-                  <span>{{currentUser.username}}</span>
-                  <br/>
-                  <span class="text-muted">{{currentUser.email}}</span>
-                    </a></li>
-                    <li>
-                      <a class="dropdown-item  d-md-none" *ngIf="this.currentRoute != '/settings'"  href="/settings">
-                        Settings
-                        </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item  d-md-none" *ngIf="this.currentRoute != '/dashboard'"  href="/dashboard">
-                        Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                      <a class="dropdown-item  d-md-none" *ngIf="this.currentRoute != '/convert'"  href="/convert">
-                        Convert
-                        </a>
-                    </li>
-                    <li><a class="dropdown-item text-danger"  href="#" (click)="logout()">
-                      <svg class="text-danger" width="16px" height="16px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M14 20H6C4.89543 20 4 19.1046 4 18L4 6C4 4.89543 4.89543 4 6 4H14M10 12H21M21 12L18 15M21 12L18 9" stroke="#db1f00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
-                      <span class="ms-2">Log out</span>
-                      </a></li>
-                      
-          </ul>
-        </div>
-      </div>
-      
+<nav class="navbar navbar-expand-lg bg-primary">
+  <div class="container-fluid d-flex justify-content-between">
+    <div>
+      <a class="navbar-brand text-light" href="#">Files Converter</a>
     </div>
-  </nav>
+
+    <div class="d-flex align-items-center">
+      <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a *ngIf="this.currentRoute == '/convert' && this.currentUser" class="nav-link active text-light"
+              aria-current="page" href="/dashboard">Dashboard</a>
+            <a *ngIf="this.currentRoute == '/dashboard'" class="nav-link active text-light" aria-current="page"
+              href="/convert">Convert</a>
+          </li>
+          <li class="nav-item d-flex" *ngIf="this.currentUser && this.currentRoute != '/settings'"
+            style="cursor: pointer">
+            <a class="nav-link active text-light" aria-current="page" (click)="this.navigateToSettings()">Settings</a>
+          </li>
+          <li class="nav-item d-flex" *ngIf="this.currentRoute == '/settings'">
+            <a class="nav-link active text-light" aria-current="page" href="/dashboard">Dashboard</a>
+          </li>
+          <li class="nav-item d-flex" *ngIf="this.currentRoute == '/settings'">
+            <a class="nav-link active text-light" aria-current="page" href="/convert">Convert</a>
+          </li>
+          <li class="nav-item" *ngIf="!currentUser">
+            <a class="nav-link active text-light" aria-current="page" href="/login">Log in</a>
+          </li>
+        </ul>
+      </div>
+      <div class=" ms-3 btn-group dropstart" *ngIf="currentUser">
+        <svg style="cursor: pointer" width="18px" height="18px" viewBox="0 0 24 24" data-bs-toggle="dropdown"
+          aria-expanded="false" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+          <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+          <g id="SVGRepo_iconCarrier">
+            <path
+              d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
+              stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            <path d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z" stroke="#ffffff" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"></path>
+          </g>
+        </svg>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item">
+              <span>{{currentUser.username}}</span>
+              <br />
+              <span class="text-muted">{{currentUser.email}}</span>
+            </a></li>
+          <li>
+            <a class="dropdown-item  d-md-none" *ngIf="this.currentRoute != '/settings'" href="/settings">
+              Settings
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item  d-md-none" *ngIf="this.currentRoute != '/dashboard'" href="/dashboard">
+              Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="dropdown-item  d-md-none" *ngIf="this.currentRoute != '/convert'" href="/convert">
+              Convert
+            </a>
+          </li>
+          <li><a class="dropdown-item text-danger" href="#" (click)="logout()">
+              <svg class="text-danger" width="16px" height="16px" viewBox="0 0 24 24" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                <g id="SVGRepo_iconCarrier">
+                  <path
+                    d="M14 20H6C4.89543 20 4 19.1046 4 18L4 6C4 4.89543 4.89543 4 6 4H14M10 12H21M21 12L18 15M21 12L18 9"
+                    stroke="#db1f00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </g>
+              </svg>
+              <span class="ms-2">Log out</span>
+            </a></li>
+
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</nav>

@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth-service';
 import { FormsModule } from '@angular/forms';
+import { UserService } from '../services/http/user-service';
 
 @Component({
   selector: 'app-settings',
@@ -20,7 +21,7 @@ export class SettingsComponent implements OnInit {
   private debounceTimer: any;
 
   constructor (
-    private http: HttpClient,
+    private userService: UserService,
     private authService: AuthService) {}
 
   ngOnInit(): void {
@@ -31,7 +32,7 @@ export class SettingsComponent implements OnInit {
   }
 
   private loadUserInfo() {
-    this.http.get<UserInfo>(`https://localhost:7099/api/user`)
+    this.userService.getUserInfo()
     .subscribe({
       next: (userInfo) => {
         this.userInfo = userInfo;
@@ -43,7 +44,7 @@ export class SettingsComponent implements OnInit {
   }
 
   deleteAccount() {
-    this.http.post(`https://localhost:7099/api/user/delete`, {})
+    this.userService.deleteUserAccount()
     .subscribe({
       next: (response) => {
         this.authService.logout();
@@ -64,18 +65,9 @@ export class SettingsComponent implements OnInit {
     }, 500);
   }
 
-
   changePreferences() {
-    const updatedPreferencesBody = {
-      deleteFilesAutomatically: this.userInfo.deleteFilesAutomatically
-    };
-    this.http.post(`https://localhost:7099/api/user/update-preferences`, updatedPreferencesBody)
-    .subscribe({
-      next: (response) => {
-      },
-      error: (error) => {
-      }
-    });
+    this.userService.updatePreferences(this.userInfo.deleteFilesAutomatically)
+    .subscribe();
   }
 
 }
