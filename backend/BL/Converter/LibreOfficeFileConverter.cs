@@ -15,7 +15,7 @@ namespace backend.BL.Converter
             {"csv", "csv:\"Text - txt - csv (StarCalc)\""},
             {"xlsx", "xlsx:\"Calc MS Excel 2007 XML\""},
             {"txt", "txt:\"Text\""},
-            {"rtf", "rtf:\"Text (encoded):UTF8\""}
+            {"rtf", "rtf:\"Rich Text Format\""}
         };
 
         private static readonly Dictionary<string, string> _fileMimeTypeMap = new()

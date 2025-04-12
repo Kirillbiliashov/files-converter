@@ -41,6 +41,7 @@ namespace backend.Controllers
         [Authorize]
         public async Task<IActionResult> GetAccessToken(string provider)
         {
+            Console.WriteLine($"Inside get access token code");
             var identity = HttpContext.User.Identity as ClaimsIdentity;
             var userId = identity?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrWhiteSpace(userId))
@@ -51,6 +52,11 @@ namespace backend.Controllers
             var manager = _signInManagerFactory(provider);
 
             var accessToken = await _accessTokenRepository.GetAccessToken(userId, provider);
+
+            if (accessToken == null || string.IsNullOrWhiteSpace(accessToken?.Token))
+            {
+                return Ok(new { });
+            }
 
             var encryptionKey = await _encryptionKeyStorage.GetKey(userId);
             if (accessToken?.TokenExpiration <= DateTime.UtcNow)
@@ -66,8 +72,8 @@ namespace backend.Controllers
                     var accessTokenBytes = Encoding.UTF8.GetBytes(accessToken.Token);
                     var encryptedBytes = _encryptor.EncryptData(accessTokenBytes, encryptionKey);
                     var encryptedToken = Convert.ToBase64String(encryptedBytes);
-                    var tokenExpiration =  DateTime.UtcNow.AddSeconds(validAccessToken.ExpiresIn);
-                    
+                    var tokenExpiration = DateTime.UtcNow.AddSeconds(validAccessToken.ExpiresIn);
+
                     await _accessTokenRepository.UpdateAccessToken(accessToken.Id, encryptedToken, tokenExpiration);
                 }
             }

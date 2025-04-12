@@ -72,7 +72,6 @@ export class ConvertComponent implements OnInit {
           await this.googlePickerService.loadPicker();
         },
         error: (error) => {
-          console.log(`error, ${error}`)
           this.accessToken = null;
         }
       });

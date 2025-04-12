@@ -77,7 +77,7 @@ export class AuthService {
   }
 
   getGoogleAccessToken() {
-    return this.http.get<{ accessToken: string }>(`${environment.apiBaseUrl}/auth/access-token?provider=Google`)
+    return this.http.get<{ accessToken: string }>(`${environment.apiBaseUrl}/access-token?provider=Google`)
   }
 
 }
