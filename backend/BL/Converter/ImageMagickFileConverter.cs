@@ -28,7 +28,7 @@ namespace backend.BL.Converter
 
             Process process = new Process();
             process.StartInfo.FileName = "magick";
-            process.StartInfo.Arguments = $"{inputFilePath} {outputFilePath}";
+            process.StartInfo.Arguments = $"-density 300 {inputFilePath} {outputFilePath}";
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;

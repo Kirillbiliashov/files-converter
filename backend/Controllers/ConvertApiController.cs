@@ -26,7 +26,7 @@ namespace backend.Controllers
     public class ConvertApiController : ControllerBase
     {
 
-        private readonly Func<string, IFileConverter> _converterFactory;
+        private readonly Func<string, string, IFileConverter> _converterFactory;
         private readonly IConversionRepository _conversionRepository;
         private readonly AzureBlobService _azureBlobService;
         private readonly IEncryptor _encryptor;
@@ -42,7 +42,7 @@ namespace backend.Controllers
         }
 
         public ConvertApiController(
-            Func<string, IFileConverter> converterFactory,
+            Func<string, string, IFileConverter> converterFactory,
             IConversionRepository conversionRepository,
             AzureBlobService azureBlobService,
             IEncryptor encryptor,
@@ -120,7 +120,7 @@ namespace backend.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                var converter = _converterFactory(outputFormat);
+                var converter = _converterFactory(inputFileExtension.Substring(1), outputFormat);
                 var conversionResult = await converter.ConvertFile(inputFilePath, outputFilePath);
 
                 sw.Stop();

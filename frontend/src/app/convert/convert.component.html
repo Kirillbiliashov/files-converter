@@ -333,7 +333,6 @@
                     <td>
                         <div class="d-flex align-items-center">
                             <button class="btn btn-light convert-btn" [disabled]="fileItem.status == Status.Converting"
-                                *ngIf="!fileItem.conversion"
                                 [disabled]="!fileItem.selectedFormat || fileItem.selectedFormat == 'Format'">
                                 <svg (click)="convertFile(fileItem)" fill="#0061ff" width="16px" height="16px"
                                     viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" stroke="#0061ff"

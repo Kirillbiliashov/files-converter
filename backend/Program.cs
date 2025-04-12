@@ -68,11 +68,17 @@ builder.Services.AddControllers();
 
 builder.Services.AddScoped<ImageMagickFileConverter>();
 builder.Services.AddScoped<LibreOfficeFileConverter>();
-builder.Services.AddScoped<Func<string, IFileConverter>>(provider => format =>
+builder.Services.AddScoped<DocxToImageConverter>();
+builder.Services.AddScoped<Func<string, string, IFileConverter>>(provider => (inputExt, outputFormat) =>
 {
     var imageFormats = new HashSet<string> { "png", "jpg", "jpeg", "gif", "bmp", "tiff" };
+    var wordFormats = new HashSet<string> { "docx", "doc", "rtf", "odt" }; 
+    if (imageFormats.Contains(outputFormat.ToLower()) && wordFormats.Contains(inputExt.ToLower()))
+    {
+        return provider.GetRequiredService<DocxToImageConverter>();
+    }
 
-    return imageFormats.Contains(format.ToLower())
+    return imageFormats.Contains(outputFormat.ToLower())
         ? provider.GetRequiredService<ImageMagickFileConverter>()
         : provider.GetRequiredService<LibreOfficeFileConverter>();
 });
