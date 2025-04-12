@@ -21,7 +21,7 @@ builder.Services.AddScoped<IMongoDatabase>(sp =>
 
 builder.Services.AddSingleton<GoogleSignInManager>();
 builder.Services.AddSingleton<DropboxSignInManager>();
-
+builder.Services.AddSingleton<JwtTokenService>();
 builder.Services.AddSingleton<AzureBlobService>();
 builder.Services.AddSingleton<IEncryptor, GcmEncryptor>();
 builder.Services.AddSingleton<IEncryptionKeyStorage, EncryptionKeyAzureStorage>();

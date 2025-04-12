@@ -24,14 +24,8 @@ namespace backend.Services
             await _containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
             BlobClient blobClient = _containerClient.GetBlobClient(blobName);
 
-            // if (!blobClient.Exists())
-            // {
-            //     await blobClient.
-            // }
-
             using (var stream = new MemoryStream(fileBytes))
             {
-                // Upload the bytes as a blob
                 var response = await blobClient.UploadAsync(stream);
             }
 

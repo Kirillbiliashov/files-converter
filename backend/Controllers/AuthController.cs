@@ -20,6 +20,7 @@ using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using backend.BL.Encryption;
 using backend.Repositories;
+using backend.Services;
 
 namespace backend.Controllers
 {
@@ -33,6 +34,7 @@ namespace backend.Controllers
         private readonly int _tokenExpiryMins;
         private readonly IEncryptionKeyStorage _encryptionKeyStorage;
         private readonly IEncryptor _encryptor;
+        private readonly JwtTokenService _jwtTokenService;
 
         private readonly Func<string, OAuthSignInManager> _signInManagerFactory;
 
@@ -44,6 +46,7 @@ namespace backend.Controllers
             IConfiguration configuration,
             Func<string, OAuthSignInManager> signInManagerFactory,
             IEncryptionKeyStorage encryptionKeyStorage,
+            JwtTokenService jwtTokenService,
             IEncryptor encryptor)
         {
             _userRepository = userRepository;
@@ -53,6 +56,7 @@ namespace backend.Controllers
             _signInManagerFactory = signInManagerFactory;
             _encryptionKeyStorage = encryptionKeyStorage;
             _encryptor = encryptor;
+            _jwtTokenService = jwtTokenService;
         }
 
 
@@ -78,7 +82,7 @@ namespace backend.Controllers
             await _userRepository.AddUser(user);
             user.PasswordHash = null;
 
-            var token = GenerateJwtToken(user.IdInternal);
+            var token = _jwtTokenService.GenerateJwtToken(user.IdInternal);
             return Ok(new { token, user });
         }
 
@@ -99,7 +103,7 @@ namespace backend.Controllers
                 return Unauthorized("Invalid credentials.");
             }
 
-            var token = GenerateJwtToken(user.IdInternal);
+            var token = _jwtTokenService.GenerateJwtToken(user.IdInternal);
             user.PasswordHash = null;
 
             await _userRepository.UpdateLastLoginTime(user.IdInternal);
@@ -141,7 +145,7 @@ namespace backend.Controllers
             await UpsertAccessToken(accessTokenResponse, user.IdInternal, body.provider);
             await _userRepository.UpdateLastLoginTime(user.IdInternal);
 
-            var token = GenerateJwtToken(user.IdInternal);
+            var token = _jwtTokenService.GenerateJwtToken(user.IdInternal);
 
             return Ok(new { token, user, tokenExpirationDate = JwtTokenExpirationTime });
         }
@@ -163,33 +167,6 @@ namespace backend.Controllers
             await _accessTokenRepository.UpsertUserAccessToken(userId, accessToken);
         }
 
-        private string GenerateJwtToken(string userId)
-        {
-            var jwtSettings = _configuration.GetSection("JwtSettings");
-            var secretKey = jwtSettings["SecretKey"];
-            var issuer = jwtSettings["Issuer"];
-            var audience = jwtSettings["Audience"];
-            var expiryMinutes = int.Parse(jwtSettings["ExpiryInMinutes"]);
-
-            var claims = new List<Claim>
-        {
-            new Claim(JwtRegisteredClaimNames.Sub, userId),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer,
-                audience,
-                claims,
-                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
-                signingCredentials: creds);
-
-            var tokenResponse = new JwtSecurityTokenHandler().WriteToken(token);
-            return tokenResponse;
-        }
 
     }
 
