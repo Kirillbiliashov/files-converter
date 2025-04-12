@@ -2,6 +2,7 @@ using System.Text;
 using backend.BL.Converter;
 using backend.BL.Encryption;
 using backend.BL.Integrations;
+using backend.Repositories;
 using backend.Services;
 using backend.Services.Background;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,6 +25,11 @@ builder.Services.AddSingleton<DropboxSignInManager>();
 builder.Services.AddSingleton<AzureBlobService>();
 builder.Services.AddSingleton<IEncryptor, GcmEncryptor>();
 builder.Services.AddSingleton<IEncryptionKeyStorage, EncryptionKeyAzureStorage>();
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IConversionRepository, ConversionRepository>();
+builder.Services.AddScoped<IAccessTokenRepository, AccessTokenRepository>();
+builder.Services.AddScoped<IFileInteractionsRepository, FileInteractionsRepository>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = jwtSettings["SecretKey"];

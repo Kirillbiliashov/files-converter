@@ -19,6 +19,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MongoDB.Bson;
 using backend.BL.Encryption;
+using backend.Repositories;
 
 namespace backend.Controllers
 {
@@ -26,9 +27,10 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        private readonly IUserRepository _userRepository;
+         private readonly IAccessTokenRepository _accessTokenRepository;
         private readonly IConfiguration _configuration;
         private readonly int _tokenExpiryMins;
-        private readonly IMongoDatabase _db;
         private readonly IEncryptionKeyStorage _encryptionKeyStorage;
         private readonly IEncryptor _encryptor;
 
@@ -37,15 +39,17 @@ namespace backend.Controllers
         public DateTime JwtTokenExpirationTime => DateTime.UtcNow.AddMinutes(_tokenExpiryMins);
 
         public AuthController(
+            IUserRepository userRepository,
+            IAccessTokenRepository accessTokenRepository,
             IConfiguration configuration,
-            IMongoDatabase db,
             Func<string, OAuthSignInManager> signInManagerFactory,
             IEncryptionKeyStorage encryptionKeyStorage,
             IEncryptor encryptor)
         {
+            _userRepository = userRepository;
+            _accessTokenRepository = accessTokenRepository;
             _configuration = configuration;
             _tokenExpiryMins = int.Parse(_configuration["JwtSettings:ExpiryInMinutes"]);
-            _db = db;
             _signInManagerFactory = signInManagerFactory;
             _encryptionKeyStorage = encryptionKeyStorage;
             _encryptor = encryptor;
@@ -55,7 +59,7 @@ namespace backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (await _db.GetCollection<User>("users").CountDocumentsAsync(u => u.Email == request.Email) > 0)
+            if (await _userRepository.GetUsersCount(request.Email) > 0)
             {
                 return BadRequest("User already exists.");
             }
@@ -71,7 +75,7 @@ namespace backend.Controllers
             };
             user.PasswordHash = hasher.HashPassword(user, request.Password);
 
-            await _db.GetCollection<User>("users").InsertOneAsync(user);
+            await _userRepository.AddUser(user);
             user.PasswordHash = null;
 
             var token = GenerateJwtToken(user.IdInternal);
@@ -82,10 +86,7 @@ namespace backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await _db.GetCollection<User>("users")
-            .Find(u => u.Email == request.Email)
-            .SingleOrDefaultAsync();
-
+            var user = await _userRepository.GetUserByEmail(request.Email);
             if (user == null)
             {
                 return Unauthorized("Invalid credentials.");
@@ -101,7 +102,7 @@ namespace backend.Controllers
             var token = GenerateJwtToken(user.IdInternal);
             user.PasswordHash = null;
 
-            await UpdateUserLastLogin(user.Id);
+            await _userRepository.UpdateLastLoginTime(user.IdInternal);
 
             return Ok(new { token, user, tokenExpirationDate = JwtTokenExpirationTime });
         }
@@ -126,10 +127,7 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
-            var user = await _db.GetCollection<User>("users")
-            .Find(u => u.Email == userInfo.Email)
-            .SingleOrDefaultAsync();
-
+            var user = await _userRepository.GetUserByEmail(userInfo.Email);
             if (user == null)
             {
                 user = new User
@@ -137,46 +135,32 @@ namespace backend.Controllers
                     Username = userInfo.Username,
                     Email = userInfo.Email
                 };
-                await _db.GetCollection<User>("users").InsertOneAsync(user);
+                await _userRepository.AddUser(user);
             }
 
             await UpsertAccessToken(accessTokenResponse, user.IdInternal, body.provider);
-            await UpdateUserLastLogin(user.Id);
+            await _userRepository.UpdateLastLoginTime(user.IdInternal);
 
             var token = GenerateJwtToken(user.IdInternal);
 
             return Ok(new { token, user, tokenExpirationDate = JwtTokenExpirationTime });
         }
 
-        private async Task UpdateUserLastLogin(ObjectId userId)
-        {
-            var filter = Builders<User>.Filter.Eq(doc => doc.Id, userId);
-            var update = Builders<User>.Update.Set(doc => doc.LastLogin, DateTime.UtcNow);
-            await _db.GetCollection<User>("users").UpdateOneAsync(filter, update);
-        }
-
         private async Task UpsertAccessToken(AccessTokenResponse response, string userId, string provider)
         {
-            var parsedUserId = ObjectId.Parse(userId);
-            var filter = Builders<AccessToken>.Filter.Eq(t => t.UserId, parsedUserId);
-
             var encryptionKey = await _encryptionKeyStorage.GetKey(userId);
-            var accessTokenBytes = Encoding.UTF8.GetBytes(response.AccessToken);
             var encryptedAccessToken = _encryptor.EncryptData(Encoding.UTF8.GetBytes(response.AccessToken), encryptionKey);
-            var refreshTokenBytes = Encoding.UTF8.GetBytes(response.RefreshToken);
             var encryptedRefreshToken = _encryptor.EncryptData(Encoding.UTF8.GetBytes(response.AccessToken), encryptionKey);
 
-            var update = Builders<AccessToken>.Update
-                .Set(t => t.Token, Convert.ToBase64String(encryptedAccessToken))
-                .Set(t => t.RefreshToken, Convert.ToBase64String(encryptedRefreshToken))
-                .Set(t => t.TokenExpiration, DateTime.UtcNow.AddSeconds(response.ExpiresIn))
-                .Set(t => t.ConnectedAt, DateTime.UtcNow)
-                .Set(t => t.Provider, provider)
-                .SetOnInsert(t => t.UserId, parsedUserId);
+            var accessToken = new AccessToken 
+            {
+                Token = Convert.ToBase64String(encryptedAccessToken),
+                RefreshToken = Convert.ToBase64String(encryptedRefreshToken),
+                ConnectedAt = DateTime.UtcNow,
+                Provider = provider
+            };
 
-            var options = new UpdateOptions { IsUpsert = true };
-
-            await _db.GetCollection<AccessToken>("accessTokens").UpdateOneAsync(filter, update, options);
+            await _accessTokenRepository.UpsertUserAccessToken(userId, accessToken);
         }
 
         private string GenerateJwtToken(string userId)

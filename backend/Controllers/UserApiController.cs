@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using backend.Models.Db;
 using backend.Models.DTO;
+using backend.Repositories;
 using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,13 +19,25 @@ namespace backend.Controllers
     [Route("api/user")]
     public class UserApiController : ControllerBase
     {
-        private readonly IMongoDatabase _db;
         private readonly AzureBlobService _azureBlobService;
 
-        public UserApiController(IMongoDatabase db, AzureBlobService azureBlobService)
+        private readonly IUserRepository _userRepository;
+        private readonly IConversionRepository _conversionRepository;
+        private readonly IFileInteractionsRepository _fileInteractionsRepository;
+        private readonly IAccessTokenRepository _accessTokenRepository;
+
+        public UserApiController(
+            IUserRepository userRepository,
+            IConversionRepository conversionRepository,
+            IFileInteractionsRepository fileInteractionsRepository,
+            IAccessTokenRepository accessTokenRepository,
+              AzureBlobService azureBlobService)
         {
-            _db = db;
             _azureBlobService = azureBlobService;
+            _userRepository = userRepository;
+            _conversionRepository = conversionRepository;
+            _fileInteractionsRepository = fileInteractionsRepository;
+            _accessTokenRepository = accessTokenRepository;
         }
 
         [Authorize]
@@ -38,26 +51,7 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
-            var match = new BsonDocument("$match", new BsonDocument("_id", ObjectId.Parse(userId)));
-            var lookup = new BsonDocument("$lookup",
-                new BsonDocument
-                {
-                    { "from", "accessTokens" },
-                    { "localField", "_id" },
-                    { "foreignField", "userId" },
-                    { "as", "providers" }
-                });
-            var project = new BsonDocument("$project",
-                new BsonDocument
-                {
-                    { "providers._id", 0 },
-                    { "_id", 0 },
-                    { "providers.refreshToken", 0 },
-                });
-
-            var pipeline = new[] { match, lookup, project };
-            var userInfo = _db.GetCollection<User>("users").Aggregate<UserInfo>(pipeline).FirstOrDefault();
-
+            var userInfo = await _userRepository.GetUserInfo(userId);
             return Ok(userInfo);
         }
 
@@ -72,27 +66,14 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
-            var conversionsColl = _db.GetCollection<Conversion>("conversions");
-
-            var conversionUrls = await conversionsColl
-            .Find(c => c.UserId == ObjectId.Parse(userId) && c.OutputUrl != null)
-            .Project(c => c.OutputUrl)
-            .ToListAsync();
-
+            var conversionUrls = await _conversionRepository.GetConversionUrls(userId);
             var deleteUrlTasks = conversionUrls.Select(_azureBlobService.DeleteFileAsync);
             await Task.WhenAll(deleteUrlTasks);
 
-            var deleteFileInteractionsTask = _db.GetCollection<FileInteraction>("fileInteractions")
-            .DeleteManyAsync(i => i.UserId == ObjectId.Parse(userId));
-
-            var deleteConversionsTask = conversionsColl
-            .DeleteManyAsync(i => i.UserId == ObjectId.Parse(userId));
-
-            var deleteAccessTokensTask = _db.GetCollection<AccessToken>("accessTokens")
-            .DeleteManyAsync(i => i.UserId == ObjectId.Parse(userId));
-
-            var deleteUserTask = _db.GetCollection<User>("users")
-            .DeleteOneAsync(i => i.Id == ObjectId.Parse(userId));
+            var deleteFileInteractionsTask = _fileInteractionsRepository.DeleteUserInteractions(userId);
+            var deleteConversionsTask = _conversionRepository.DeleteConversions(userId);
+            var deleteAccessTokensTask = _accessTokenRepository.DeleteAccessTokens(userId);
+            var deleteUserTask = _userRepository.DeleteUser(userId);
 
             await Task.WhenAll(
                 deleteFileInteractionsTask,
@@ -114,13 +95,7 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
-            var filter = Builders<User>.Filter.Eq("_id", ObjectId.Parse(userId));
-            var update = Builders<User>.Update.Combine(
-                Builders<User>.Update.Set("deleteFiles", body.DeleteFilesAutomatically)
-            );
-
-            await _db.GetCollection<User>("users").UpdateOneAsync(filter, update);
-
+            await _userRepository.UpdateUserPreferences(userId, body.DeleteFilesAutomatically);
             return Ok();
         }
     }

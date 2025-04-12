@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using backend.BL.Converter;
 using backend.BL.Encryption;
 using backend.Models.Db;
+using backend.Repositories;
 using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -26,7 +27,7 @@ namespace backend.Controllers
     {
 
         private readonly Func<string, IFileConverter> _converterFactory;
-        private readonly IMongoDatabase _db;
+        private readonly IConversionRepository _conversionRepository;
         private readonly AzureBlobService _azureBlobService;
         private readonly IEncryptor _encryptor;
         private readonly IEncryptionKeyStorage _encryptionKeyStorage;
@@ -42,13 +43,13 @@ namespace backend.Controllers
 
         public ConvertApiController(
             Func<string, IFileConverter> converterFactory,
-            IMongoDatabase db,
+            IConversionRepository conversionRepository,
             AzureBlobService azureBlobService,
             IEncryptor encryptor,
             IEncryptionKeyStorage encryptionKeyStorage)
         {
             _converterFactory = converterFactory;
-            _db = db;
+            _conversionRepository = conversionRepository;
             _azureBlobService = azureBlobService;
             _encryptor = encryptor;
             _encryptionKeyStorage = encryptionKeyStorage;
@@ -138,7 +139,8 @@ namespace backend.Controllers
                     TimeMsecs = timeElapsed,
                     OutputUrl = outputUrl
                 };
-                await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
+
+                await _conversionRepository.AddConversion(conversion);
 
                 return conversion;
             }
@@ -153,7 +155,8 @@ namespace backend.Controllers
                     Filename = file.FileName,
                     Status = "failed",
                 };
-                await _db.GetCollection<Conversion>("conversions").InsertOneAsync(conversion);
+
+                await _conversionRepository.AddConversion(conversion);
 
                 Console.WriteLine($"Error: {e.Message}");
                 return conversion;
@@ -191,9 +194,7 @@ namespace backend.Controllers
         [HttpPost("download/{conversionId}")]
         public async Task<IActionResult> DownloadConversion(string conversionId)
         {
-            var conversion = await _db.GetCollection<Conversion>("conversions")
-            .FindSync(c => c.Id == ObjectId.Parse(conversionId))
-            .SingleOrDefaultAsync();
+            var conversion = await _conversionRepository.GetConversion(conversionId);
             if (conversion == null)
             {
                 return NotFound();

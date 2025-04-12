@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using backend.Models.Db;
+using backend.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -16,12 +17,11 @@ namespace backend.Controllers
     [Route("api/stats")]
     public class StatsApiController : ControllerBase
     {
+        private readonly IFileInteractionsRepository _fileInteractionsRepository;
 
-        private readonly IMongoDatabase _db;
-
-        public StatsApiController(IMongoDatabase db)
+        public StatsApiController(IFileInteractionsRepository fileInteractionsRepository)
         {
-            _db = db;
+            _fileInteractionsRepository = fileInteractionsRepository;
         }
 
         [Authorize]
@@ -35,8 +35,7 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
-            var collection = _db.GetCollection<FileInteraction>("fileInteractions");
-            await collection.InsertManyAsync(body.Select(s => new FileInteraction
+            await _fileInteractionsRepository.AddInteractions(body.Select(s => new FileInteraction
             {
                 UserId = ObjectId.Parse(userId),
                 Date = DateTime.UtcNow,

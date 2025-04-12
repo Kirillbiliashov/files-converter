@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using backend.Models.Db;
+using backend.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -16,11 +17,15 @@ namespace backend.Controllers
     public class DashboardApiController : ControllerBase
     {
 
-        private readonly IMongoDatabase _db;
+        private readonly IConversionRepository _conversionRepository;
+        private readonly IFileInteractionsRepository _fileInteractionsRepository;
 
-        public DashboardApiController(IMongoDatabase db)
+        public DashboardApiController(
+            IConversionRepository conversionRepository,
+            IFileInteractionsRepository fileInteractionsRepository)
         {
-            _db = db;
+            _conversionRepository = conversionRepository;
+            _fileInteractionsRepository = fileInteractionsRepository;
         }
 
 
@@ -35,11 +40,8 @@ namespace backend.Controllers
                 return Unauthorized();
             }
 
-            var fileInteractionsColl = _db.GetCollection<FileInteraction>("fileInteractions");
-            var conversionsColl = _db.GetCollection<Conversion>("conversions");
-
-            var userConversions = await conversionsColl.Find(c => c.UserId == ObjectId.Parse(userId)).SortByDescending(c => c.Date).ToListAsync();
-            var userFileInteractions = await fileInteractionsColl.Find(c => c.UserId == ObjectId.Parse(userId)).ToListAsync();
+            var userConversions = await _conversionRepository.GetConversions(userId);
+            var userFileInteractions = await _fileInteractionsRepository.GetFileInteractions(userId);
 
             var currentMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
             var previousMonth = currentMonth.AddMonths(-1);

@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using backend.BL.Encryption;
 using backend.BL.Integrations;
 using backend.Models.Db;
+using backend.Repositories;
+using Google.Apis.Util;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -18,18 +20,18 @@ namespace backend.Controllers
     [Route("api/access-token")]
     public class AccessTokenApiController : ControllerBase
     {
-        private readonly IMongoDatabase _db;
+        private readonly IAccessTokenRepository _accessTokenRepository;
         private readonly Func<string, OAuthSignInManager> _signInManagerFactory;
         private readonly IEncryptionKeyStorage _encryptionKeyStorage;
         private readonly IEncryptor _encryptor;
 
         public AccessTokenApiController(
-            IMongoDatabase db,
+            IAccessTokenRepository accessTokenRepository,
             Func<string, OAuthSignInManager> signInManagerFactory,
             IEncryptionKeyStorage encryptionKeyStorage,
             IEncryptor encryptor)
         {
-            _db = db;
+            _accessTokenRepository = accessTokenRepository;
             _signInManagerFactory = signInManagerFactory;
             _encryptionKeyStorage = encryptionKeyStorage;
             _encryptor = encryptor;
@@ -48,9 +50,7 @@ namespace backend.Controllers
 
             var manager = _signInManagerFactory(provider);
 
-            var accessToken = await _db.GetCollection<AccessToken>("accessTokens")
-            .Find(t => t.UserId == ObjectId.Parse(userId) && t.Provider == provider)
-            .SingleOrDefaultAsync();
+            var accessToken = await _accessTokenRepository.GetAccessToken(userId, provider);
 
             var encryptionKey = await _encryptionKeyStorage.GetKey(userId);
             if (accessToken?.TokenExpiration <= DateTime.UtcNow)
@@ -65,14 +65,10 @@ namespace backend.Controllers
                     accessToken.Token = validAccessToken.AccessToken;
                     var accessTokenBytes = Encoding.UTF8.GetBytes(accessToken.Token);
                     var encryptedBytes = _encryptor.EncryptData(accessTokenBytes, encryptionKey);
-
-                    var filter = Builders<AccessToken>.Filter.Eq(t => t.Id, accessToken.Id);
-                    var update = Builders<AccessToken>.Update
-                        .Set(t => t.Token, Convert.ToBase64String(encryptedBytes))
-                        .Set(t => t.TokenExpiration, DateTime.UtcNow.AddSeconds(validAccessToken.ExpiresIn))
-                        .Set(t => t.ConnectedAt, DateTime.UtcNow);
-
-                    await _db.GetCollection<AccessToken>("accessTokens").UpdateOneAsync(filter, update);
+                    var encryptedToken = Convert.ToBase64String(encryptedBytes);
+                    var tokenExpiration =  DateTime.UtcNow.AddSeconds(validAccessToken.ExpiresIn);
+                    
+                    await _accessTokenRepository.UpdateAccessToken(accessToken.Id, encryptedToken, tokenExpiration);
                 }
             }
             else

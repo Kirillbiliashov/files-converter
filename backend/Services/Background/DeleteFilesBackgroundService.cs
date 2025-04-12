@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using backend.Models.Db;
+using backend.Repositories;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -29,8 +30,9 @@ namespace backend.Services.Background
                 {
                     using (var scope = _serviceProvider.CreateScope())
                     {
-                        var db = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
-                        await DeleteFilesAsync(db);
+                        var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+                        var conversionRepository = scope.ServiceProvider.GetRequiredService<IConversionRepository>();
+                        await DeleteFilesAsync(userRepository, conversionRepository);
                     }
 
                     await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
@@ -46,38 +48,9 @@ namespace backend.Services.Background
             }
         }
 
-        protected async Task DeleteFilesAsync(IMongoDatabase db)
+        protected async Task DeleteFilesAsync(IUserRepository userRepository, IConversionRepository conversionRepository)
         {
-            var matchUsers = new BsonDocument("$match", new BsonDocument("deleteFiles", true));
-
-            var lookupConversions = new BsonDocument("$lookup",
-                new BsonDocument
-                {
-                    { "from", "conversions" },
-                    { "localField", "_id" },
-                    { "foreignField", "userId" },
-                    { "as", "conversions" }
-                });
-
-            var unwindConversions = new BsonDocument("$unwind", "$conversions");
-
-            var matchDate = new BsonDocument("$match", new BsonDocument
-            {
-                { "conversions.date", new BsonDocument("$lte", BsonDateTime.Create(DateTime.UtcNow.AddDays(-30))) },
-                { "conversions.outputUrl", new BsonDocument("$exists", true) },
-            });
-
-            var replaceRoot = new BsonDocument("$replaceRoot", new BsonDocument("newRoot", "$conversions"));
-
-            var conversions = await db.GetCollection<User>("users")
-            .Aggregate()
-            .AppendStage<BsonDocument>(matchUsers)
-            .AppendStage<BsonDocument>(lookupConversions)
-            .AppendStage<BsonDocument>(unwindConversions)
-            .AppendStage<BsonDocument>(matchDate)
-            .AppendStage<Conversion>(replaceRoot)
-            .ToListAsync();
-
+            var conversions = await userRepository.GetConversionsForDeletion();
             var conversionsChunks = conversions.Chunk(10);
             foreach (var chunk in conversionsChunks)
             {
@@ -86,10 +59,7 @@ namespace backend.Services.Background
             }
 
             var conversionObejctIds = conversions.Select(c => c.Id);
-            var filter = Builders<Conversion>.Filter.In("_id", conversionObejctIds);
-            var update = Builders<Conversion>.Update.Unset("outputUrl");
-
-            await db.GetCollection<Conversion>("conversions").UpdateManyAsync(filter, update);
+            await conversionRepository.RemoveOutputUlrs(conversionObejctIds);
         }
 
         public override Task StopAsync(CancellationToken stoppingToken)
