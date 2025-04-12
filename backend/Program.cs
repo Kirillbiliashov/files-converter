@@ -69,6 +69,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<ImageMagickFileConverter>();
 builder.Services.AddScoped<LibreOfficeFileConverter>();
 builder.Services.AddScoped<DocxToImageConverter>();
+builder.Services.AddScoped<PdfToTextConverter>();
 builder.Services.AddScoped<Func<string, string, IFileConverter>>(provider => (inputExt, outputFormat) =>
 {
     var imageFormats = new HashSet<string> { "png", "jpg", "jpeg", "gif", "bmp", "tiff" };
@@ -76,6 +77,11 @@ builder.Services.AddScoped<Func<string, string, IFileConverter>>(provider => (in
     if (imageFormats.Contains(outputFormat.ToLower()) && wordFormats.Contains(inputExt.ToLower()))
     {
         return provider.GetRequiredService<DocxToImageConverter>();
+    }
+
+    if (inputExt == "pdf" && outputFormat == "txt")
+    {
+        return provider.GetRequiredService<PdfToTextConverter>();
     }
 
     return imageFormats.Contains(outputFormat.ToLower())
