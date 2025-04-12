@@ -104,8 +104,8 @@ namespace backend.Controllers
 
             var inputFileExtension = Path.GetExtension(file.FileName);
             var tempPath = Path.GetTempPath();
-            var tempId = Guid.NewGuid();
-            var inputFilePath = Path.Combine(tempPath, file.FileName);
+            var nameId = Guid.NewGuid().ToString();
+            var inputFilePath = Path.Combine(tempPath, $"{nameId}{inputFileExtension}");
             var outputFilePath = inputFilePath.Replace(inputFileExtension, $".{outputFormat}");
             if (!string.IsNullOrWhiteSpace(filename))
             {
@@ -122,10 +122,12 @@ namespace backend.Controllers
 
                 var converter = _converterFactory(inputFileExtension.Substring(1), outputFormat);
                 var conversionResult = await converter.ConvertFile(inputFilePath, outputFilePath);
+                conversionResult.Filename = conversionResult.Filename.Replace(nameId, Path.GetFileNameWithoutExtension(file.FileName));
 
                 sw.Stop();
                 var timeElapsed = sw.ElapsedMilliseconds;
 
+                var outputFilename = file.FileName.Replace(inputFileExtension, $".{outputFormat}");
                 var outputUrl = await GetConvertedFileOutputUrl(conversionResult.Filename, conversionResult.OutputBytes);
                 var conversion = new Conversion
                 {
