@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Chart, ArcElement, DoughnutController, Tooltip, Legend } from 'chart.js';
-import { DashboardData } from '../models/dashboard-data';
+import { Conversion, DashboardData } from '../models/dashboard-data';
 import { FormatBytesPipe } from '../pipes/format-bytes-pipe';
 import { StatsService } from '../services/http/stats-service';
 import { ConvertService } from '../services/http/convert-service';
@@ -99,13 +99,13 @@ export class DashboardComponent implements OnInit {
     return Object.keys(timeRanges).reduce((a, b) => (timeRanges[a] > timeRanges[b] ? a : b));
   }
 
-    downloadFile(conversionId: string): void {
-      this.convertService.downloadConvertedFile(conversionId)
+    downloadFile(conversion: Conversion): void {
+      this.convertService.downloadConvertedFile(conversion.idInternal)
         .subscribe({
           next: (response) => {
             const blob: Blob = response.body as Blob;
-            const contentDisposition = response.headers.get('Content-Disposition');
-            downloadBlob(blob, contentDisposition);
+            const filename = conversion.outputUrl.split('/').pop();
+            downloadBlob(blob, filename);
           },
           error: () => { }
         })

@@ -147,8 +147,8 @@ export class ConvertComponent implements OnInit {
       .subscribe({
         next: (response) => {
           const blob: Blob = response.body as Blob;
-          const contentDisposition = response.headers.get('Content-Disposition');
-          downloadBlob(blob, contentDisposition);
+          const filename = fileItem.conversion?.outputUrl.split('/').pop();
+          downloadBlob(blob, filename);
 
           if (this.authService.getCurrentUser()) {
             this.statsService.addDownloadFileStats(fileItem).subscribe();
