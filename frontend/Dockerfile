@@ -8,6 +8,6 @@ RUN npm run build -- --output-path=dist
 
 # Stage 2: serve with nginx
 FROM nginx:alpine
-COPY --from=build /app/dist/frontend /usr/share/nginx/html
+COPY --from=build /app/dist/browser /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

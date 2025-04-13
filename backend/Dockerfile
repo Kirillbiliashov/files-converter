@@ -26,8 +26,10 @@ RUN apt-get update && \
         libreoffice-calc \
         libreoffice-impress \
         fonts-dejavu-core \
+        ghostscript \
         imagemagick \
         poppler-utils && \
+        sed -i 's@<policy domain="coder" rights="none" pattern="PDF" />@<!-- & -->@' /etc/ImageMagick-6/policy.xml && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "backend.dll"]
