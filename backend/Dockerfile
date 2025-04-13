@@ -26,7 +26,8 @@ RUN apt-get update && \
         libreoffice-calc \
         libreoffice-impress \
         fonts-dejavu-core \
-        imagemagick \
+        imagemagick-7.q16 \
+        imagemagick-7.q16hdri \
         poppler-utils && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
