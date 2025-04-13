@@ -26,8 +26,10 @@ namespace backend.BL.Converter
                 throw new Exception($"Couldn't extract input file name and path");
             }
 
+            var isDevelopment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") == "Development";
+            var imageTool = isDevelopment ? "magick" : "convert";
             Process process = new Process();
-            process.StartInfo.FileName = "magick";
+            process.StartInfo.FileName = imageTool;
             process.StartInfo.Arguments = $"-density 300 {inputFilePath} {outputFilePath}";
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
