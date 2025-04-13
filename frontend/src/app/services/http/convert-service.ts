@@ -36,7 +36,7 @@ export class ConvertService {
     
         formData.append('metadata', JSON.stringify(metadata));
     
-        return this.http.post<{ id: string, conversion: Conversion }[]>(`${environment.apiBaseUrl}//convert/all`, formData)
+        return this.http.post<{ id: string, conversion: Conversion }[]>(`${environment.apiBaseUrl}/convert/all`, formData)
     }
 
     downloadConvertedFile(conversionId: string) {
