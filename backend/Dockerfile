@@ -4,9 +4,7 @@ EXPOSE 5087
 
 ENV ASPNETCORE_URLS=http://+:5087
 
-USER app
-
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG configuration=Release
 WORKDIR /src
 COPY ["backend.csproj", "./"]
@@ -21,7 +19,15 @@ RUN dotnet publish "backend.csproj" -c $configuration -o /app/publish /p:UseAppH
 FROM base AS final
 WORKDIR /app
 RUN apt-get update && \
-    apt-get install -y libreoffice imagemagick poppler-utils && \
+    apt-get install -y --no-install-recommends \
+        libreoffice-core \
+        libreoffice-common \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-impress \
+        fonts-dejavu-core \
+        imagemagick \
+        poppler-utils && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "backend.dll"]
