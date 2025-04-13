@@ -5,13 +5,13 @@ EXPOSE 5087
 ENV ASPNETCORE_URLS=http://+:5087
 
 USER app
+
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG configuration=Release
 WORKDIR /src
-COPY ["backend/backend.csproj", "backend/"]
-RUN dotnet restore "backend/backend.csproj"
+COPY ["backend.csproj", "./"]
+RUN dotnet restore "backend.csproj"
 COPY . .
-WORKDIR "/src/backend"
 RUN dotnet build "backend.csproj" -c $configuration -o /app/build
 
 FROM build AS publish
